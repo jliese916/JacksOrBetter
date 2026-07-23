@@ -1,0 +1,22 @@
+{
+  "name": "Jacks or Better Trainer",
+  "short_name": "Jacks Trainer",
+  "description": "Practice optimal Jacks or Better video poker holds.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e8edf5",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
