@@ -59,6 +59,9 @@ const el = {
   importFromPlay: document.querySelector("#importFromPlay"),
   lookupFeedback: document.querySelector("#lookupFeedback"),
   playBalance: document.querySelector("#playBalance"),
+  playAccuracy: document.querySelector("#playAccuracy"),
+  playBalanceChart: document.querySelector("#playBalanceChart"),
+  playChartSummary: document.querySelector("#playChartSummary"),
   playMadeHand: document.querySelector("#playMadeHand"),
   playHand: document.querySelector("#playHand"),
   playSelection: document.querySelector("#playSelection"),
@@ -82,6 +85,18 @@ const state = {
   lookupResults: [],
 
   playBalance: Number(localStorage.getItem("jacksPlayBalance") || 0),
+  playAttempts: Number(localStorage.getItem("jacksPlayAttempts") || 0),
+  playCorrect: Number(localStorage.getItem("jacksPlayCorrect") || 0),
+  playBalanceHistory: (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
+      if (Array.isArray(saved) && saved.length && saved.every(Number.isFinite)) return saved;
+    } catch (error) {
+      console.warn("Could not read saved Play balance history.", error);
+    }
+    const balance = Number(localStorage.getItem("jacksPlayBalance") || 0);
+    return balance === 0 ? [0] : [0, balance];
+  })(),
   playPhase: "idle",
   playHand: [],
   playDeck: [],
@@ -232,8 +247,11 @@ function saveTrainingScore() {
   localStorage.setItem("jacksCorrect", state.correct);
 }
 
-function savePlayBalance() {
+function savePlaySession() {
   localStorage.setItem("jacksPlayBalance", state.playBalance);
+  localStorage.setItem("jacksPlayAttempts", state.playAttempts);
+  localStorage.setItem("jacksPlayCorrect", state.playCorrect);
+  localStorage.setItem("jacksPlayBalanceHistory", JSON.stringify(state.playBalanceHistory));
 }
 
 function status(message, type = "") {
@@ -699,7 +717,7 @@ async function startPlayHand() {
   if (["dealing", "drawing"].includes(state.playPhase)) return;
 
   state.playBalance -= WAGER;
-  savePlayBalance();
+  savePlaySession();
 
   state.playDeck = deck();
   state.playHand = state.playDeck.slice(0, 5);
@@ -724,6 +742,15 @@ async function startPlayHand() {
 
 async function drawPlayHand() {
   if (state.playPhase !== "holding") return;
+
+  let decisionWasCorrect = null;
+  if (state.strategy) {
+    try {
+      decisionWasCorrect = optimal(state.playHand).some(hold => equal(hold, state.playHeld));
+    } catch (error) {
+      console.error("Could not score this Play decision.", error);
+    }
+  }
 
   const replacementPositions = state.playHand
     .map((card, index) => state.playHeld.has(card) ? -1 : index)
@@ -752,7 +779,14 @@ async function drawPlayHand() {
 
   const result = evaluateHand(state.playHand);
   state.playBalance += result.payout;
-  savePlayBalance();
+
+  if (decisionWasCorrect !== null) {
+    state.playAttempts += 1;
+    if (decisionWasCorrect) state.playCorrect += 1;
+  }
+
+  state.playBalanceHistory.push(state.playBalance);
+  savePlaySession();
 
   if (result.payout > 0) {
     playFeedback(`${result.name} pays ${result.payout} units.`, "correct");
@@ -766,12 +800,15 @@ async function drawPlayHand() {
 
 function resetPlayBalance() {
   state.playBalance = 0;
+  state.playAttempts = 0;
+  state.playCorrect = 0;
+  state.playBalanceHistory = [0];
   state.playPhase = "idle";
   state.playHand = [];
   state.playDeck = [];
   state.playHeld.clear();
   state.playHiddenPositions.clear();
-  savePlayBalance();
+  savePlaySession();
   playFeedback("Balance reset to zero.", "");
   renderPlay();
   renderLookup();
@@ -782,10 +819,130 @@ function playAction() {
   else if (!["dealing", "drawing"].includes(state.playPhase)) startPlayHand();
 }
 
+function drawBalanceChart() {
+  const canvas = el.playBalanceChart;
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  const scale = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.round(rect.width * scale));
+  const height = Math.max(1, Math.round(rect.height * scale));
+
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  const context = canvas.getContext("2d");
+  context.setTransform(scale, 0, 0, scale, 0, 0);
+  context.clearRect(0, 0, rect.width, rect.height);
+
+  const values = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
+  const padding = { left: 10, right: 10, top: 12, bottom: 14 };
+  const chartWidth = Math.max(1, rect.width - padding.left - padding.right);
+  const chartHeight = Math.max(1, rect.height - padding.top - padding.bottom);
+
+  let minimum = Math.min(0, ...values);
+  let maximum = Math.max(0, ...values);
+  if (minimum === maximum) {
+    minimum -= 5;
+    maximum += 5;
+  } else {
+    const extra = Math.max(1, (maximum - minimum) * 0.1);
+    minimum -= extra;
+    maximum += extra;
+  }
+
+  const xFor = index => padding.left + (values.length === 1 ? 0 : index * chartWidth / (values.length - 1));
+  const yFor = value => padding.top + (maximum - value) * chartHeight / (maximum - minimum);
+  const zeroY = yFor(0);
+
+  context.save();
+  context.strokeStyle = "rgba(71, 85, 105, .58)";
+  context.lineWidth = 1;
+  context.setLineDash([5, 5]);
+  context.beginPath();
+  context.moveTo(padding.left, zeroY);
+  context.lineTo(rect.width - padding.right, zeroY);
+  context.stroke();
+  context.restore();
+
+  const buildPath = () => {
+    context.beginPath();
+    values.forEach((value, index) => {
+      const x = xFor(index);
+      const y = yFor(value);
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+  };
+
+  if (values.length > 1) {
+    context.save();
+    context.beginPath();
+    context.rect(0, 0, rect.width, Math.max(0, zeroY));
+    context.clip();
+    buildPath();
+    context.lineTo(xFor(values.length - 1), zeroY);
+    context.lineTo(xFor(0), zeroY);
+    context.closePath();
+    context.fillStyle = "rgba(22, 163, 74, .11)";
+    context.fill();
+    context.restore();
+
+    context.save();
+    context.beginPath();
+    context.rect(0, zeroY, rect.width, Math.max(0, rect.height - zeroY));
+    context.clip();
+    buildPath();
+    context.lineTo(xFor(values.length - 1), zeroY);
+    context.lineTo(xFor(0), zeroY);
+    context.closePath();
+    context.fillStyle = "rgba(220, 38, 38, .10)";
+    context.fill();
+    context.restore();
+
+    const drawClippedLine = (top, bottom, color) => {
+      context.save();
+      context.beginPath();
+      context.rect(0, top, rect.width, Math.max(0, bottom - top));
+      context.clip();
+      buildPath();
+      context.strokeStyle = color;
+      context.lineWidth = 2.5;
+      context.lineJoin = "round";
+      context.lineCap = "round";
+      context.stroke();
+      context.restore();
+    };
+
+    drawClippedLine(0, zeroY, "#15803d");
+    drawClippedLine(zeroY, rect.height, "#dc2626");
+  } else {
+    context.fillStyle = "#64748b";
+    context.beginPath();
+    context.arc(xFor(0), yFor(values[0]), 3, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  const lastValue = values[values.length - 1];
+  context.fillStyle = lastValue >= 0 ? "#15803d" : "#dc2626";
+  context.beginPath();
+  context.arc(xFor(values.length - 1), yFor(lastValue), 3.5, 0, Math.PI * 2);
+  context.fill();
+}
+
 function renderPlay() {
   el.playBalance.textContent = formatUnits(state.playBalance);
   el.playBalance.classList.toggle("negative", state.playBalance < 0);
   el.playBalance.classList.toggle("positive", state.playBalance > 0);
+
+  const playAccuracy = state.playAttempts ? 100 * state.playCorrect / state.playAttempts : 0;
+  el.playAccuracy.textContent = playAccuracy.toFixed(1) + "%";
+  el.playChartSummary.textContent = `${state.playAttempts} completed ${state.playAttempts === 1 ? "hand" : "hands"}`;
+  window.requestAnimationFrame(drawBalanceChart);
 
   el.playHand.replaceChildren();
 
@@ -895,6 +1052,16 @@ deal();
 renderLookup();
 renderPlay();
 renderChallenge();
+
+if ("ResizeObserver" in window && el.playBalanceChart) {
+  new ResizeObserver(() => {
+    if (state.mode === "play") drawBalanceChart();
+  }).observe(el.playBalanceChart);
+} else {
+  window.addEventListener("resize", () => {
+    if (state.mode === "play") drawBalanceChart();
+  });
+}
 
 loadURL().catch(error => {
   console.error(error);

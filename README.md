@@ -75,3 +75,8 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 - Initial Play deals reveal from left to right.
 - Reset Balance is separated from the main play control.
 - Card ranks are slightly larger.
+
+
+## Version 9
+
+Play mode now tracks optimal-decision accuracy for the current balance session and displays a running balance chart. The chart records the balance after each completed hand, uses a dotted zero line, and colors results green above zero and red below zero. Reset Balance also resets Play accuracy and chart history.

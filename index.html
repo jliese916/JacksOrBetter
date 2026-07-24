@@ -82,8 +82,17 @@
     <section id="playPanel" class="panel hidden">
       <div class="play-stats" aria-label="Play statistics">
         <div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
+        <div><small>ACCURACY</small><strong id="playAccuracy">0.0%</strong></div>
         <div><small>BET</small><strong>5 units</strong></div>
       </div>
+
+      <section class="balance-chart-card" aria-label="Running balance chart">
+        <div class="balance-chart-heading">
+          <span>Running balance</span>
+          <small id="playChartSummary">0 completed hands</small>
+        </div>
+        <canvas id="playBalanceChart" class="balance-chart" role="img" aria-label="Line chart of the Play balance over completed hands"></canvas>
+      </section>
 
       <p>Deal, tap the cards you want to hold, then draw.</p>
       <div id="playMadeHand" class="made-hand" aria-live="polite"></div>
