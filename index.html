@@ -97,7 +97,11 @@
           <span>Running balance</span>
           <small id="playChartSummary">0 completed hands</small>
         </div>
-        <canvas id="playBalanceChart" class="balance-chart" role="img" aria-label="Line chart of the Play balance over completed hands"></canvas>
+        <div class="balance-chart-legend" aria-hidden="true">
+          <span><i class="legend-line legend-actual"></i>Your play</span>
+          <span><i class="legend-line legend-optimal"></i>Optimal play</span>
+        </div>
+        <canvas id="playBalanceChart" class="balance-chart" role="img" aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards"></canvas>
       </section>
 
       <p>Deal, tap the cards you want to hold, then draw.</p>

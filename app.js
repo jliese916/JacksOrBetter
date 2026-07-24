@@ -98,6 +98,31 @@ const state = {
     const balance = Number(localStorage.getItem("jacksPlayBalance") || 0);
     return balance === 0 ? [0] : [0, balance];
   })(),
+  playOptimalBalance: (() => {
+    const saved = localStorage.getItem("jacksPlayOptimalBalance");
+    return saved === null
+      ? Number(localStorage.getItem("jacksPlayBalance") || 0)
+      : Number(saved);
+  })(),
+  playOptimalBalanceHistory: (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jacksPlayOptimalBalanceHistory") || "null");
+      if (Array.isArray(saved) && saved.length && saved.every(Number.isFinite)) return saved;
+    } catch (error) {
+      console.warn("Could not read saved optimal-play history.", error);
+    }
+
+    // When upgrading an existing session, begin the shadow line at the current actual history.
+    try {
+      const actual = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
+      if (Array.isArray(actual) && actual.length && actual.every(Number.isFinite)) return [...actual];
+    } catch (error) {
+      console.warn("Could not migrate the prior Play history.", error);
+    }
+
+    const balance = Number(localStorage.getItem("jacksPlayBalance") || 0);
+    return balance === 0 ? [0] : [0, balance];
+  })(),
   playPhase: "idle",
   playHand: [],
   playDeck: [],
@@ -253,6 +278,8 @@ function savePlaySession() {
   localStorage.setItem("jacksPlayAttempts", state.playAttempts);
   localStorage.setItem("jacksPlayCorrect", state.playCorrect);
   localStorage.setItem("jacksPlayBalanceHistory", JSON.stringify(state.playBalanceHistory));
+  localStorage.setItem("jacksPlayOptimalBalance", state.playOptimalBalance);
+  localStorage.setItem("jacksPlayOptimalBalanceHistory", JSON.stringify(state.playOptimalBalanceHistory));
 }
 
 function status(message, type = "") {
@@ -738,6 +765,7 @@ async function startPlayHand() {
   if (["dealing", "drawing"].includes(state.playPhase)) return;
 
   state.playBalance -= WAGER;
+  state.playOptimalBalance -= WAGER;
   savePlaySession();
 
   state.playDeck = deck();
@@ -765,21 +793,46 @@ async function startPlayHand() {
 async function drawPlayHand() {
   if (state.playPhase !== "holding") return;
 
+  const initialHand = [...state.playHand];
+  const orderedDrawPile = [...state.playDeck];
   let decisionWasCorrect = null;
+  let optimalHold = null;
+
   if (state.strategy) {
     try {
-      decisionWasCorrect = optimal(state.playHand).some(hold => equal(hold, state.playHeld));
+      const optimalHolds = optimal(initialHand);
+      decisionWasCorrect = optimalHolds.some(hold => equal(hold, state.playHeld));
+
+      // If the player's hold is optimal, use that same hold so both paths match exactly.
+      // Otherwise use the first optimal hold stored in the strategy table.
+      optimalHold = decisionWasCorrect
+        ? new Set(state.playHeld)
+        : optimalHolds[0];
     } catch (error) {
       console.error("Could not score this Play decision.", error);
     }
   }
 
-  const replacementPositions = state.playHand
+  let optimalResult = null;
+  if (optimalHold) {
+    const optimalFinalHand = [...initialHand];
+    const optimalReplacementPositions = initialHand
+      .map((card, index) => optimalHold.has(card) ? -1 : index)
+      .filter(index => index >= 0);
+
+    optimalReplacementPositions.forEach((position, index) => {
+      optimalFinalHand[position] = orderedDrawPile[index];
+    });
+
+    optimalResult = evaluateHand(optimalFinalHand);
+  }
+
+  const replacementPositions = initialHand
     .map((card, index) => state.playHeld.has(card) ? -1 : index)
     .filter(index => index >= 0);
 
-  const drawnCards = state.playDeck.slice(0, replacementPositions.length);
-  state.playDeck = state.playDeck.slice(replacementPositions.length);
+  const drawnCards = orderedDrawPile.slice(0, replacementPositions.length);
+  state.playDeck = orderedDrawPile.slice(replacementPositions.length);
 
   replacementPositions.forEach((position, index) => {
     state.playHand[position] = drawnCards[index];
@@ -801,6 +854,7 @@ async function drawPlayHand() {
 
   const result = evaluateHand(state.playHand);
   state.playBalance += result.payout;
+  if (optimalResult) state.playOptimalBalance += optimalResult.payout;
 
   if (decisionWasCorrect !== null) {
     state.playAttempts += 1;
@@ -808,6 +862,7 @@ async function drawPlayHand() {
   }
 
   state.playBalanceHistory.push(state.playBalance);
+  state.playOptimalBalanceHistory.push(state.playOptimalBalance);
   savePlaySession();
 
   if (result.payout > 0) {
@@ -826,9 +881,11 @@ async function drawPlayHand() {
 
 function resetPlayBalance() {
   state.playBalance = 0;
+  state.playOptimalBalance = 0;
   state.playAttempts = 0;
   state.playCorrect = 0;
   state.playBalanceHistory = [0];
+  state.playOptimalBalanceHistory = [0];
   state.playPhase = "idle";
   state.playHand = [];
   state.playDeck = [];
@@ -866,13 +923,18 @@ function drawBalanceChart() {
   context.setTransform(scale, 0, 0, scale, 0, 0);
   context.clearRect(0, 0, rect.width, rect.height);
 
-  const values = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
-  const padding = { left: 10, right: 10, top: 12, bottom: 14 };
+  const actualValues = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
+  const optimalValues = state.playOptimalBalanceHistory.length
+    ? state.playOptimalBalanceHistory
+    : [0];
+  const allValues = [...actualValues, ...optimalValues];
+  const pointCount = Math.max(actualValues.length, optimalValues.length);
+  const padding = { left: 10, right: 84, top: 12, bottom: 14 };
   const chartWidth = Math.max(1, rect.width - padding.left - padding.right);
   const chartHeight = Math.max(1, rect.height - padding.top - padding.bottom);
 
-  let minimum = Math.min(0, ...values);
-  let maximum = Math.max(0, ...values);
+  let minimum = Math.min(0, ...allValues);
+  let maximum = Math.max(0, ...allValues);
   if (minimum === maximum) {
     minimum -= 5;
     maximum += 5;
@@ -882,7 +944,7 @@ function drawBalanceChart() {
     maximum += extra;
   }
 
-  const xFor = index => padding.left + (values.length === 1 ? 0 : index * chartWidth / (values.length - 1));
+  const xFor = index => padding.left + (pointCount === 1 ? 0 : index * chartWidth / (pointCount - 1));
   const yFor = value => padding.top + (maximum - value) * chartHeight / (maximum - minimum);
   const zeroY = yFor(0);
 
@@ -896,7 +958,7 @@ function drawBalanceChart() {
   context.stroke();
   context.restore();
 
-  const buildPath = () => {
+  const buildPath = values => {
     context.beginPath();
     values.forEach((value, index) => {
       const x = xFor(index);
@@ -906,13 +968,13 @@ function drawBalanceChart() {
     });
   };
 
-  if (values.length > 1) {
+  if (actualValues.length > 1) {
     context.save();
     context.beginPath();
     context.rect(0, 0, rect.width, Math.max(0, zeroY));
     context.clip();
-    buildPath();
-    context.lineTo(xFor(values.length - 1), zeroY);
+    buildPath(actualValues);
+    context.lineTo(xFor(actualValues.length - 1), zeroY);
     context.lineTo(xFor(0), zeroY);
     context.closePath();
     context.fillStyle = "rgba(22, 163, 74, .11)";
@@ -923,8 +985,8 @@ function drawBalanceChart() {
     context.beginPath();
     context.rect(0, zeroY, rect.width, Math.max(0, rect.height - zeroY));
     context.clip();
-    buildPath();
-    context.lineTo(xFor(values.length - 1), zeroY);
+    buildPath(actualValues);
+    context.lineTo(xFor(actualValues.length - 1), zeroY);
     context.lineTo(xFor(0), zeroY);
     context.closePath();
     context.fillStyle = "rgba(220, 38, 38, .10)";
@@ -936,7 +998,7 @@ function drawBalanceChart() {
       context.beginPath();
       context.rect(0, top, rect.width, Math.max(0, bottom - top));
       context.clip();
-      buildPath();
+      buildPath(actualValues);
       context.strokeStyle = color;
       context.lineWidth = 2.5;
       context.lineJoin = "round";
@@ -950,15 +1012,79 @@ function drawBalanceChart() {
   } else {
     context.fillStyle = "#64748b";
     context.beginPath();
-    context.arc(xFor(0), yFor(values[0]), 3, 0, Math.PI * 2);
+    context.arc(xFor(0), yFor(actualValues[0]), 3, 0, Math.PI * 2);
     context.fill();
   }
 
-  const lastValue = values[values.length - 1];
-  context.fillStyle = lastValue >= 0 ? "#15803d" : "#dc2626";
+  if (optimalValues.length > 1) {
+    context.save();
+    buildPath(optimalValues);
+    context.strokeStyle = "#64748b";
+    context.lineWidth = 2;
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    context.stroke();
+    context.restore();
+  }
+
+  const actualLast = actualValues[actualValues.length - 1];
+  context.fillStyle = actualLast >= 0 ? "#15803d" : "#dc2626";
   context.beginPath();
-  context.arc(xFor(values.length - 1), yFor(lastValue), 3.5, 0, Math.PI * 2);
+  context.arc(xFor(actualValues.length - 1), yFor(actualLast), 3.5, 0, Math.PI * 2);
   context.fill();
+
+  const optimalLast = optimalValues[optimalValues.length - 1];
+  context.fillStyle = "#64748b";
+  context.beginPath();
+  context.arc(xFor(optimalValues.length - 1), yFor(optimalLast), 3, 0, Math.PI * 2);
+  context.fill();
+
+  // Show the current counterfactual difference between optimal play and the player.
+  const delta = optimalLast - actualLast;
+  const latestX = xFor(pointCount - 1);
+  const actualY = yFor(actualLast);
+  const optimalY = yFor(optimalLast);
+  const topY = Math.min(actualY, optimalY);
+  const bottomY = Math.max(actualY, optimalY);
+  const bracketX = latestX + 12;
+  const labelX = bracketX + 7;
+  const labelY = Math.min(rect.height - 11, Math.max(11, (topY + bottomY) / 2));
+  const deltaLabel = delta === 0
+    ? "0 units"
+    : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} ${Math.abs(delta) === 1 ? "unit" : "units"}`;
+
+  context.save();
+  context.strokeStyle = "rgba(71, 85, 105, .88)";
+  context.fillStyle = "#334155";
+  context.lineWidth = 1.4;
+  context.lineCap = "round";
+
+  if (Math.abs(actualY - optimalY) < 2.5) {
+    context.beginPath();
+    context.moveTo(bracketX - 4, actualY);
+    context.lineTo(bracketX + 4, actualY);
+    context.stroke();
+  } else {
+    context.beginPath();
+    context.moveTo(bracketX, topY);
+    context.lineTo(bracketX, bottomY);
+    context.moveTo(bracketX - 4, topY);
+    context.lineTo(bracketX + 4, topY);
+    context.moveTo(bracketX - 4, bottomY);
+    context.lineTo(bracketX + 4, bottomY);
+    context.stroke();
+  }
+
+  context.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillText(deltaLabel, labelX, labelY);
+  context.restore();
+
+  canvas.setAttribute(
+    "aria-label",
+    `Line chart comparing your Play balance with optimal play. Current optimal-minus-you difference: ${deltaLabel}.`
+  );
 }
 
 function renderPlay() {

@@ -29,7 +29,7 @@ Then open:
 
 Replace the existing app files in the repository with these files, while keeping
 `JacksOrBetterStrategy.json`. Commit the changes to the branch used by GitHub Pages.
-The service-worker cache name is `jacks-trainer-v10`, allowing the new version to replace older cached files.
+The service-worker cache name is `jacks-trainer-v12`, allowing the new version to replace older cached files.
 
 ## Play-mode paytable
 
@@ -85,3 +85,13 @@ Play mode now tracks optimal-decision accuracy for the current balance session a
 ## Version 10
 
 Play accuracy now gives immediate decision feedback: a green plus pulses beside the percentage after an optimal hold, while a red minus pulses after a non-optimal hold. The indicator then settles to a dim state until the next hand. Reset Balance clears it along with the Play session statistics.
+
+
+## Version 11
+
+The Play chart now overlays a gray optimal-play shadow line. For each completed hand, the app replays the same initial five cards and the same ordered draw pile using an optimal hold. If the player's hold is already optimal, the shadow uses that same hold so the results match exactly. Reset Balance clears both histories.
+
+
+## Version 12
+
+The Play balance chart now displays the current difference between the optimal-play shadow balance and the player's balance. A bracket connects the latest two values and labels the signed difference in units; overlapping lines display `0 units`.
