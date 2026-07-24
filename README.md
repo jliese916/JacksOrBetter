@@ -105,6 +105,11 @@ The Play balance chart now displays the current difference between the optimal-p
 - Added a signed **Optimal − you** summary pill above the chart.
 - Moved reset into a **Session controls** dropdown.
 - Added a footer link to the Blackjack trainer.
-- Service-worker cache: `el-jefe-jacks-trainer-v13`.
+- Service-worker cache: `el-jefe-jacks-trainer-v15`.
 
 The footer links to `https://jliese916.github.io/BlackJackTrainer/`.
+
+
+## Challenge review
+
+After a 200-hand challenge, select **See missed hands** to review each missed five-card hand, the submitted hold, and all tied optimal holds accepted by the strategy table.

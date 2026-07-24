@@ -32,6 +32,7 @@ const el = {
   challengePanel: document.querySelector("#challengePanel"),
   challengeActive: document.querySelector("#challengeActive"),
   challengeSummary: document.querySelector("#challengeSummary"),
+  challengeReview: document.querySelector("#challengeReview"),
   challengeProgress: document.querySelector("#challengeProgress"),
   challengeMadeHand: document.querySelector("#challengeMadeHand"),
   challengeHand: document.querySelector("#challengeHand"),
@@ -135,7 +136,8 @@ const state = {
   challengeSelected: new Set(),
   challengeCompleted: 0,
   challengeCorrect: 0,
-  challengeFinished: false
+  challengeFinished: false,
+  challengeMisses: []
 };
 
 const rank = card => (card - 1) % 13;
@@ -435,6 +437,8 @@ function startChallenge() {
   state.challengeCompleted = 0;
   state.challengeCorrect = 0;
   state.challengeFinished = false;
+  state.challengeMisses = [];
+  el.challengeReview.classList.add("hidden");
   dealChallengeHand();
   setMode("challenge");
 }
@@ -452,8 +456,16 @@ function submitChallengeHold() {
 
   try {
     const holds = optimal(state.challengeHand);
-    if (holds.some(hold => equal(hold, state.challengeSelected))) {
+    const wasCorrect = holds.some(hold => equal(hold, state.challengeSelected));
+    if (wasCorrect) {
       state.challengeCorrect += 1;
+    } else {
+      state.challengeMisses.push({
+        handNumber: state.challengeCompleted + 1,
+        hand: [...state.challengeHand],
+        userHold: [...state.challengeSelected].sort((a, b) => a - b),
+        optimalHolds: holds.map(hold => [...hold].sort((a, b) => a - b))
+      });
     }
 
     state.challengeCompleted += 1;
@@ -483,6 +495,7 @@ function leaveChallenge() {
   state.challengeFinished = false;
   state.challengeHand = [];
   state.challengeSelected.clear();
+  el.challengeReview.classList.add("hidden");
   setMode(destination);
 }
 
@@ -535,6 +548,13 @@ function renderChallengeCertificate() {
     el.challengeSummary.append(result);
   }
 
+  const reviewLink = document.createElement("button");
+  reviewLink.type = "button";
+  reviewLink.className = "challenge-review-link";
+  reviewLink.textContent = `See missed hands (${state.challengeMisses.length})`;
+  reviewLink.onclick = showChallengeReview;
+  el.challengeSummary.append(reviewLink);
+
   const buttons = document.createElement("div");
   buttons.className = "challenge-summary-actions";
 
@@ -556,8 +576,89 @@ function renderChallengeCertificate() {
   el.challengeSummary.append(buttons);
 }
 
+function describeStoredHold(cards) {
+  return cards.length ? cards.map(label).join(" ") : "Discard all five cards";
+}
+
+function renderChallengeReview() {
+  el.challengeReview.replaceChildren();
+
+  const headingRow = document.createElement("div");
+  headingRow.className = "challenge-review-heading";
+  const headingText = document.createElement("div");
+  headingText.innerHTML = `<div class="challenge-kicker">EL JEFE CHALLENGE</div><h2>Missed hands</h2>`;
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "challenge-exit";
+  back.textContent = "Back to results";
+  back.onclick = () => {
+    el.challengeReview.classList.add("hidden");
+    el.challengeSummary.classList.remove("hidden");
+  };
+  headingRow.append(headingText, back);
+  el.challengeReview.append(headingRow);
+
+  const intro = document.createElement("p");
+  intro.className = "challenge-review-intro";
+  intro.textContent = state.challengeMisses.length
+    ? `${state.challengeMisses.length} hand${state.challengeMisses.length === 1 ? "" : "s"} to review.`
+    : "Perfect challenge. There were no missed hands.";
+  el.challengeReview.append(intro);
+
+  if (!state.challengeMisses.length) return;
+
+  const list = document.createElement("div");
+  list.className = "missed-hand-list";
+
+  state.challengeMisses.forEach((miss) => {
+    const item = document.createElement("article");
+    item.className = "missed-hand-card";
+
+    const number = document.createElement("div");
+    number.className = "missed-hand-number";
+    number.textContent = `Hand ${miss.handNumber}`;
+
+    const hand = document.createElement("div");
+    hand.className = "mini-hand challenge-review-hand";
+    miss.hand.forEach(card => hand.append(miniCard(card)));
+
+    const decisions = document.createElement("div");
+    decisions.className = "missed-hold-grid";
+
+    const yourDecision = document.createElement("div");
+    yourDecision.className = "missed-hold-row";
+    yourDecision.innerHTML = '<span>Your hold</span>';
+    const yourValue = document.createElement("strong");
+    yourValue.className = "incorrect-decision";
+    yourValue.textContent = describeStoredHold(miss.userHold);
+    yourDecision.append(yourValue);
+
+    const correctDecision = document.createElement("div");
+    correctDecision.className = "missed-hold-row";
+    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
+    const correctValue = document.createElement("strong");
+    correctValue.className = "correct-decision";
+    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
+    correctDecision.append(correctValue);
+
+    decisions.append(yourDecision, correctDecision);
+    item.append(number, hand, decisions);
+    list.append(item);
+  });
+
+  el.challengeReview.append(list);
+}
+
+function showChallengeReview() {
+  el.challengeSummary.classList.add("hidden");
+  el.challengeReview.classList.remove("hidden");
+  renderChallengeReview();
+  el.challengeReview.scrollIntoView({ block:"start" });
+}
+
 function renderChallenge() {
   el.challengeLaunch.disabled = !state.strategy;
+  if (!state.challengeFinished) el.challengeReview.classList.add("hidden");
   el.challengeActive.classList.toggle("hidden", state.challengeFinished);
   el.challengeSummary.classList.toggle("hidden", !state.challengeFinished);
 
