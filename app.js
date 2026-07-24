@@ -1,6 +1,6 @@
 "use strict";
 
-const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
 const CHALLENGE_HANDS = 200;
@@ -98,6 +98,7 @@ const state = {
 const rank = card => (card - 1) % 13;
 const suit = card => Math.floor((card - 1) / 13);
 const label = card => RANKS[rank(card)] + SUITS[suit(card)];
+const suitClass = card => ["hearts", "diamonds", "clubs", "spades"][suit(card)];
 
 function deck() {
   const cards = Array.from({ length: 52 }, (_, index) => index + 1);
@@ -141,16 +142,17 @@ function evaluateHand(hand) {
   else if (counts[0] === 2 && counts[1] === 2) name = "Two Pair";
   else if (counts[0] === 2) {
     const pairRank = [...rankCounts.entries()].find(([, count]) => count === 2)?.[0];
-    if (pairRank >= 9) name = "Jacks or Better";
+    name = pairRank >= 9 ? "Jacks or Better" : "Small Pair";
   }
 
-  return { name, payout: name ? PAYTABLE[name] : 0 };
+  return { name, payout: PAYTABLE[name] || 0 };
 }
 
 function setMadeHand(element, hand) {
   const result = evaluateHand(hand);
   element.textContent = result.name;
   element.classList.toggle("visible", Boolean(result.name));
+  element.classList.toggle("small-pair", result.name === "Small Pair");
 }
 
 function deal() {
@@ -173,14 +175,28 @@ function cardButton(card, { selected = false, disabled = false, onClick = null, 
   button.className = "card" +
     (placeholder ? " placeholder" : "") +
     (cardBack ? " card-back" : "") +
-    (suit(card) < 2 && !placeholder && !cardBack ? " red" : "") +
+    (!placeholder && !cardBack ? ` suit-${suitClass(card)}` : "") +
     (selected ? " selected" : "");
-  button.textContent = placeholder ? "+" : cardBack ? "" : label(card);
   button.disabled = disabled || placeholder || cardBack;
 
-  if (cardBack) {
+  if (placeholder) {
+    button.textContent = "+";
+  } else if (cardBack) {
     button.setAttribute("aria-label", "Drawing card");
-  } else if (!placeholder) {
+  } else {
+    const topSuit = document.createElement("span");
+    topSuit.className = "card-suit card-suit-top";
+    topSuit.textContent = SUITS[suit(card)];
+
+    const rankText = document.createElement("span");
+    rankText.className = "card-rank";
+    rankText.textContent = RANKS[rank(card)];
+
+    const bottomSuit = document.createElement("span");
+    bottomSuit.className = "card-suit card-suit-bottom";
+    bottomSuit.textContent = SUITS[suit(card)];
+
+    button.append(topSuit, rankText, bottomSuit);
     button.setAttribute("aria-label", label(card));
     button.setAttribute("aria-pressed", String(selected));
     if (onClick) button.onclick = onClick;
@@ -539,8 +555,22 @@ function clearLookup() {
 
 function miniCard(card) {
   const span = document.createElement("span");
-  span.className = "mini-card" + (suit(card) < 2 ? " red" : "");
-  span.textContent = label(card);
+  span.className = `mini-card suit-${suitClass(card)}`;
+
+  const topSuit = document.createElement("span");
+  topSuit.className = "mini-card-suit mini-card-suit-top";
+  topSuit.textContent = SUITS[suit(card)];
+
+  const rankText = document.createElement("span");
+  rankText.className = "mini-card-rank";
+  rankText.textContent = RANKS[rank(card)];
+
+  const bottomSuit = document.createElement("span");
+  bottomSuit.className = "mini-card-suit mini-card-suit-bottom";
+  bottomSuit.textContent = SUITS[suit(card)];
+
+  span.append(topSuit, rankText, bottomSuit);
+  span.setAttribute("aria-label", label(card));
   return span;
 }
 
@@ -610,7 +640,7 @@ function renderLookup() {
   SUITS.forEach((symbol, index) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "picker-button suit-button" + (index < 2 ? " red" : "");
+    button.className = `picker-button suit-button suit-${["hearts", "diamonds", "clubs", "spades"][index]}`;
     button.textContent = symbol;
     button.disabled = state.pendingRank === null || state.lookupHand.length >= 5;
     button.onclick = () => chooseSuit(index);

@@ -52,3 +52,11 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 - Discarded cards turn into blue card backs and reveal left to right.
 - Play feedback reports only the payout, without a net-this-hand sentence.
 - Training score controls appear only in Train mode.
+
+
+## Version 6 display updates
+
+- Tens display as `10` rather than `T`.
+- Card faces use a large centered rank with suit marks in the top-right and bottom-left corners.
+- Four-color deck: hearts red, diamonds blue, clubs black, and spades green.
+- Non-paying pairs are labeled `Small Pair` in purple.
