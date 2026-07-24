@@ -58,5 +58,11 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 
 - Tens display as `10` rather than `T`.
 - Card faces use a large centered rank with suit marks in the top-right and bottom-left corners.
-- Four-color deck: hearts red, diamonds blue, clubs black, and spades green.
+- Four-color deck: hearts red, diamonds blue, clubs green, and spades black.
 - Non-paying pairs are labeled `Small Pair` in purple.
+
+## Version 7 display updates
+
+- Clubs are green and spades are black.
+- Card ranks are slightly larger without changing card dimensions.
+- Training score and percentage are contained inside Train mode only.

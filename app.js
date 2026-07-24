@@ -347,7 +347,6 @@ function setMode(mode) {
   el.challengePanel.classList.toggle("hidden", !inChallenge);
   el.modeTabs.classList.toggle("hidden", inChallenge);
   el.challengeLaunchWrap.classList.toggle("hidden", inChallenge);
-  el.scorePanel.classList.toggle("hidden", mode !== "train");
   el.helpPanel.classList.toggle("hidden", inChallenge);
 
   if (mode === "lookup") renderLookup();
