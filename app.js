@@ -1,322 +1,809 @@
 "use strict";
 
-const RANKS=["2","3","4","5","6","7","8","9","T","J","Q","K","A"];
-const SUITS=["\u2665","\u2666","\u2663","\u2660"];
+const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
+const WAGER = 5;
+const CHALLENGE_HANDS = 200;
+const CHALLENGE_PASSING_SCORE = 190;
 
-const el={
-  status:document.querySelector("#status"),
-  trainTab:document.querySelector("#trainTab"),lookupTab:document.querySelector("#lookupTab"),
-  trainPanel:document.querySelector("#trainPanel"),lookupPanel:document.querySelector("#lookupPanel"),scorePanel:document.querySelector("#scorePanel"),
-  hand:document.querySelector("#hand"),selection:document.querySelector("#selection"),check:document.querySelector("#check"),newHand:document.querySelector("#newHand"),feedback:document.querySelector("#feedback"),
-  score:document.querySelector("#score"),percentage:document.querySelector("#percentage"),reset:document.querySelector("#reset"),file:document.querySelector("#file"),
-  lookupHand:document.querySelector("#lookupHand"),lookupPrompt:document.querySelector("#lookupPrompt"),rankPicker:document.querySelector("#rankPicker"),suitPicker:document.querySelector("#suitPicker"),findHold:document.querySelector("#findHold"),clearLookup:document.querySelector("#clearLookup"),lookupFeedback:document.querySelector("#lookupFeedback")
+const PAYTABLE = {
+  "Royal Flush": 4000,
+  "Straight Flush": 250,
+  "Four of a Kind": 125,
+  "Full House": 45,
+  "Flush": 30,
+  "Straight": 20,
+  "Three of a Kind": 15,
+  "Two Pair": 10,
+  "Jacks or Better": 5
 };
 
-const state={
-  strategy:null,
-  mode:"train",
-  hand:[],selected:new Set(),answered:false,
-  attempts:Number(localStorage.getItem("jacksAttempts")||0),
-  correct:Number(localStorage.getItem("jacksCorrect")||0),
-  lookupHand:[],pendingRank:null,lookupResults:[]
+const el = {
+  status: document.querySelector("#status"),
+  trainTab: document.querySelector("#trainTab"),
+  lookupTab: document.querySelector("#lookupTab"),
+  playTab: document.querySelector("#playTab"),
+  modeTabs: document.querySelector("#modeTabs"),
+  challengeLaunchWrap: document.querySelector("#challengeLaunchWrap"),
+  challengeLaunch: document.querySelector("#challengeLaunch"),
+  trainPanel: document.querySelector("#trainPanel"),
+  lookupPanel: document.querySelector("#lookupPanel"),
+  playPanel: document.querySelector("#playPanel"),
+  challengePanel: document.querySelector("#challengePanel"),
+  challengeActive: document.querySelector("#challengeActive"),
+  challengeSummary: document.querySelector("#challengeSummary"),
+  challengeProgress: document.querySelector("#challengeProgress"),
+  challengeMadeHand: document.querySelector("#challengeMadeHand"),
+  challengeHand: document.querySelector("#challengeHand"),
+  challengeSelection: document.querySelector("#challengeSelection"),
+  challengeSubmit: document.querySelector("#challengeSubmit"),
+  exitChallenge: document.querySelector("#exitChallenge"),
+  scorePanel: document.querySelector("#scorePanel"),
+  trainMadeHand: document.querySelector("#trainMadeHand"),
+  hand: document.querySelector("#hand"),
+  selection: document.querySelector("#selection"),
+  check: document.querySelector("#check"),
+  newHand: document.querySelector("#newHand"),
+  feedback: document.querySelector("#feedback"),
+  score: document.querySelector("#score"),
+  percentage: document.querySelector("#percentage"),
+  reset: document.querySelector("#reset"),
+  helpPanel: document.querySelector("#helpPanel"),
+  file: document.querySelector("#file"),
+  lookupHand: document.querySelector("#lookupHand"),
+  lookupPrompt: document.querySelector("#lookupPrompt"),
+  rankPicker: document.querySelector("#rankPicker"),
+  suitPicker: document.querySelector("#suitPicker"),
+  findHold: document.querySelector("#findHold"),
+  clearLookup: document.querySelector("#clearLookup"),
+  lookupFeedback: document.querySelector("#lookupFeedback"),
+  playBalance: document.querySelector("#playBalance"),
+  playMadeHand: document.querySelector("#playMadeHand"),
+  playHand: document.querySelector("#playHand"),
+  playSelection: document.querySelector("#playSelection"),
+  playAction: document.querySelector("#playAction"),
+  resetBalance: document.querySelector("#resetBalance"),
+  playFeedback: document.querySelector("#playFeedback")
 };
 
-const rank=c=>(c-1)%13;
-const suit=c=>Math.floor((c-1)/13);
-const label=c=>RANKS[rank(c)]+SUITS[suit(c)];
+const state = {
+  strategy: null,
+  mode: "train",
 
-function deck(){
-  const a=Array.from({length:52},(_,i)=>i+1);
-  for(let i=51;i>0;i--){
-    const x=new Uint32Array(1);crypto.getRandomValues(x);
-    const j=x[0]%(i+1);[a[i],a[j]]=[a[j],a[i]];
+  hand: [],
+  selected: new Set(),
+  answered: false,
+  attempts: Number(localStorage.getItem("jacksAttempts") || 0),
+  correct: Number(localStorage.getItem("jacksCorrect") || 0),
+
+  lookupHand: [],
+  pendingRank: null,
+  lookupResults: [],
+
+  playBalance: Number(localStorage.getItem("jacksPlayBalance") || 0),
+  playPhase: "idle",
+  playHand: [],
+  playDeck: [],
+  playHeld: new Set(),
+
+  challengePreviousMode: "train",
+  challengeHand: [],
+  challengeSelected: new Set(),
+  challengeCompleted: 0,
+  challengeCorrect: 0,
+  challengeFinished: false
+};
+
+const rank = card => (card - 1) % 13;
+const suit = card => Math.floor((card - 1) / 13);
+const label = card => RANKS[rank(card)] + SUITS[suit(card)];
+
+function deck() {
+  const cards = Array.from({ length: 52 }, (_, index) => index + 1);
+  for (let i = cards.length - 1; i > 0; i -= 1) {
+    const random = new Uint32Array(1);
+    crypto.getRandomValues(random);
+    const j = random[0] % (i + 1);
+    [cards[i], cards[j]] = [cards[j], cards[i]];
   }
-  return a;
+  return cards;
 }
 
-function deal(){
-  state.hand=deck().slice(0,5).sort((a,b)=>a-b);
-  state.selected.clear();state.answered=false;
-  feedback("","");renderTraining();
+function evaluateHand(hand) {
+  if (hand.length !== 5) return { name: "", payout: 0 };
+
+  const ranks = hand.map(rank).sort((a, b) => a - b);
+  const suits = hand.map(suit);
+  const rankCounts = new Map();
+
+  for (const r of ranks) {
+    rankCounts.set(r, (rankCounts.get(r) || 0) + 1);
+  }
+
+  const counts = [...rankCounts.values()].sort((a, b) => b - a);
+  const uniqueRanks = [...rankCounts.keys()].sort((a, b) => a - b);
+  const flush = suits.every(s => s === suits[0]);
+  const wheel = uniqueRanks.join(",") === "0,1,2,3,12";
+  const ordinaryStraight = uniqueRanks.length === 5 && uniqueRanks[4] - uniqueRanks[0] === 4;
+  const straight = wheel || ordinaryStraight;
+  const royal = flush && uniqueRanks.join(",") === "8,9,10,11,12";
+
+  let name = "";
+
+  if (royal) name = "Royal Flush";
+  else if (straight && flush) name = "Straight Flush";
+  else if (counts[0] === 4) name = "Four of a Kind";
+  else if (counts[0] === 3 && counts[1] === 2) name = "Full House";
+  else if (flush) name = "Flush";
+  else if (straight) name = "Straight";
+  else if (counts[0] === 3) name = "Three of a Kind";
+  else if (counts[0] === 2 && counts[1] === 2) name = "Two Pair";
+  else if (counts[0] === 2) {
+    const pairRank = [...rankCounts.entries()].find(([, count]) => count === 2)?.[0];
+    if (pairRank >= 9) name = "Jacks or Better";
+  }
+
+  return { name, payout: name ? PAYTABLE[name] : 0 };
 }
 
-function toggle(c){
-  if(state.answered)return;
-  state.selected.has(c)?state.selected.delete(c):state.selected.add(c);
+function setMadeHand(element, hand) {
+  const result = evaluateHand(hand);
+  element.textContent = result.name;
+  element.classList.toggle("visible", Boolean(result.name));
+}
+
+function deal() {
+  state.hand = deck().slice(0, 5).sort((a, b) => a - b);
+  state.selected.clear();
+  state.answered = false;
+  feedback("", "");
   renderTraining();
 }
 
-function cardButton(c,{selected=false,disabled=false,onClick=null,placeholder=false}={}){
-  const b=document.createElement("button");
-  b.type="button";
-  b.className="card"+(placeholder?" placeholder":"")+(suit(c)<2&&!placeholder?" red":"")+(selected?" selected":"");
-  b.textContent=placeholder?"+":label(c);
-  b.disabled=disabled||placeholder;
-  if(!placeholder){
-    b.setAttribute("aria-label",label(c));
-    b.setAttribute("aria-pressed",String(selected));
-    if(onClick)b.onclick=onClick;
-  }
-  return b;
+function toggle(card) {
+  if (state.answered) return;
+  state.selected.has(card) ? state.selected.delete(card) : state.selected.add(card);
+  renderTraining();
 }
 
-function renderTraining(){
+function cardButton(card, { selected = false, disabled = false, onClick = null, placeholder = false } = {}) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "card" +
+    (placeholder ? " placeholder" : "") +
+    (suit(card) < 2 && !placeholder ? " red" : "") +
+    (selected ? " selected" : "");
+  button.textContent = placeholder ? "+" : label(card);
+  button.disabled = disabled || placeholder;
+
+  if (!placeholder) {
+    button.setAttribute("aria-label", label(card));
+    button.setAttribute("aria-pressed", String(selected));
+    if (onClick) button.onclick = onClick;
+  }
+
+  return button;
+}
+
+function renderTraining() {
   el.hand.replaceChildren();
-  for(const c of state.hand){
-    el.hand.append(cardButton(c,{selected:state.selected.has(c),disabled:state.answered,onClick:()=>toggle(c)}));
+  for (const card of state.hand) {
+    el.hand.append(cardButton(card, {
+      selected: state.selected.has(card),
+      disabled: state.answered,
+      onClick: () => toggle(card)
+    }));
   }
-  const kept=state.hand.filter(c=>state.selected.has(c));
-  el.selection.textContent=kept.length?"Keep: "+kept.map(label).join(" "):"Discard all five cards";
-  const p=state.attempts?100*state.correct/state.attempts:0;
-  el.score.textContent=`${state.correct} / ${state.attempts}`;
-  el.percentage.textContent=p.toFixed(1)+"%";
-  el.check.disabled=!state.strategy||state.answered;
+
+  setMadeHand(el.trainMadeHand, state.hand);
+
+  const kept = state.hand.filter(card => state.selected.has(card));
+  el.selection.textContent = kept.length ? "Keep: " + kept.map(label).join(" ") : "Discard all five cards";
+
+  const percentage = state.attempts ? 100 * state.correct / state.attempts : 0;
+  el.score.textContent = `${state.correct} / ${state.attempts}`;
+  el.percentage.textContent = percentage.toFixed(1) + "%";
+  el.check.disabled = !state.strategy || state.answered;
 }
 
-function save(){
-  localStorage.setItem("jacksAttempts",state.attempts);
-  localStorage.setItem("jacksCorrect",state.correct);
+function saveTrainingScore() {
+  localStorage.setItem("jacksAttempts", state.attempts);
+  localStorage.setItem("jacksCorrect", state.correct);
 }
 
-function status(s,type=""){
-  el.status.textContent=s;
-  el.status.className="status"+(type?" "+type:"");
+function savePlayBalance() {
+  localStorage.setItem("jacksPlayBalance", state.playBalance);
 }
 
-function feedback(s,type){
-  el.feedback.textContent=s;
-  el.feedback.className="feedback"+(type?" "+type:"");
+function status(message, type = "") {
+  el.status.textContent = message;
+  el.status.className = "status" + (type ? " " + type : "");
 }
 
-function canonicalize(hand){
-  const rows=Array.from({length:4},()=>Array(13).fill(0));
-  for(const c of hand)rows[suit(c)][rank(c)]=1;
-  const ordered=rows.map((row,originalSuit)=>({row,originalSuit})).sort((a,b)=>{
-    for(let r=0;r<13;r++)if(a.row[r]!==b.row[r])return a.row[r]-b.row[r];
-    return a.originalSuit-b.originalSuit;
+function feedback(message, type) {
+  el.feedback.textContent = message;
+  el.feedback.className = "feedback" + (type ? " " + type : "");
+}
+
+function playFeedback(message, type = "") {
+  el.playFeedback.textContent = message;
+  el.playFeedback.className = "feedback" + (type ? " " + type : "");
+}
+
+function canonicalize(hand) {
+  const rows = Array.from({ length: 4 }, () => Array(13).fill(0));
+  for (const card of hand) rows[suit(card)][rank(card)] = 1;
+
+  const ordered = rows
+    .map((row, originalSuit) => ({ row, originalSuit }))
+    .sort((left, right) => {
+      for (let r = 0; r < 13; r += 1) {
+        if (left.row[r] !== right.row[r]) return left.row[r] - right.row[r];
+      }
+      return left.originalSuit - right.originalSuit;
+    });
+
+  const canonical = [];
+  const original = [];
+
+  ordered.forEach(({ row, originalSuit }, canonicalSuit) => {
+    row.forEach((present, r) => {
+      if (present) {
+        canonical.push(r + 1 + 13 * canonicalSuit);
+        original.push(r + 1 + 13 * originalSuit);
+      }
+    });
   });
-  const canonical=[],original=[];
-  ordered.forEach(({row,originalSuit},canonicalSuit)=>row.forEach((present,r)=>{
-    if(present){canonical.push(r+1+13*canonicalSuit);original.push(r+1+13*originalSuit);}
-  }));
-  let key=0;
-  for(const c of canonical)key=53*key+c;
-  return{key:String(key),original};
+
+  let key = 0;
+  for (const card of canonical) key = 53 * key + card;
+  return { key: String(key), original };
 }
 
-function fromMask(mask,cards){
-  const set=new Set();
-  for(let i=0;i<5;i++)if(mask&(1<<(4-i)))set.add(cards[i]);
+function fromMask(mask, cards) {
+  const set = new Set();
+  for (let i = 0; i < 5; i += 1) {
+    if (mask & (1 << (4 - i))) set.add(cards[i]);
+  }
   return set;
 }
 
-function optimal(hand){
-  const c=canonicalize(hand),masks=state.strategy[c.key];
-  if(!Array.isArray(masks))throw new Error(`Missing key ${c.key} for ${hand}`);
-  return masks.map(m=>fromMask(Number(m),c.original));
+function optimal(hand) {
+  const canonical = canonicalize(hand);
+  const masks = state.strategy[canonical.key];
+  if (!Array.isArray(masks)) throw new Error(`Missing key ${canonical.key} for ${hand}`);
+  return masks.map(mask => fromMask(Number(mask), canonical.original));
 }
 
-function equal(a,b){
-  if(a.size!==b.size)return false;
-  for(const x of a)if(!b.has(x))return false;
+function equal(left, right) {
+  if (left.size !== right.size) return false;
+  for (const item of left) if (!right.has(item)) return false;
   return true;
 }
 
-function describeForHand(set,hand){
-  const a=hand.filter(c=>set.has(c));
-  return a.length?a.map(label).join(" "):"discard all five cards";
+function describeForHand(set, hand) {
+  const cards = hand.filter(card => set.has(card));
+  return cards.length ? cards.map(label).join(" ") : "discard all five cards";
 }
 
-function check(){
-  try{
-    const holds=optimal(state.hand),ok=holds.some(h=>equal(h,state.selected));
-    state.attempts++;state.answered=true;
-    if(ok){
-      state.correct++;feedback("Correct!","correct");
-    }else{
-      const d=[...new Set(holds.map(h=>describeForHand(h,state.hand)))];
-      feedback((d.length===1?"Optimal play: ":"Optimal plays: ")+d.join(" or "),"incorrect");
+function check() {
+  try {
+    const holds = optimal(state.hand);
+    const correct = holds.some(hold => equal(hold, state.selected));
+    state.attempts += 1;
+    state.answered = true;
+
+    if (correct) {
+      state.correct += 1;
+      feedback("Correct!", "correct");
+    } else {
+      const descriptions = [...new Set(holds.map(hold => describeForHand(hold, state.hand)))];
+      feedback((descriptions.length === 1 ? "Optimal play: " : "Optimal plays: ") + descriptions.join(" or "), "incorrect");
     }
-    save();renderTraining();
-  }catch(e){
-    console.error(e);feedback("Strategy lookup failed for this hand. See the browser console.","error");
+
+    saveTrainingScore();
+    renderTraining();
+  } catch (error) {
+    console.error(error);
+    feedback("Strategy lookup failed for this hand. See the browser console.", "error");
   }
 }
 
-function setMode(mode){
-  state.mode=mode;
-  const training=mode==="train";
-  el.trainTab.classList.toggle("active",training);
-  el.lookupTab.classList.toggle("active",!training);
-  el.trainTab.setAttribute("aria-selected",String(training));
-  el.lookupTab.setAttribute("aria-selected",String(!training));
-  el.trainPanel.classList.toggle("hidden",!training);
-  el.lookupPanel.classList.toggle("hidden",training);
-  el.scorePanel.classList.toggle("hidden",!training);
-  if(!training)renderLookup();
+function setMode(mode) {
+  state.mode = mode;
+
+  const regularModes = ["train", "lookup", "play"];
+  const tabs = { train: el.trainTab, lookup: el.lookupTab, play: el.playTab };
+  const panels = { train: el.trainPanel, lookup: el.lookupPanel, play: el.playPanel };
+  const inChallenge = mode === "challenge";
+
+  for (const name of regularModes) {
+    const active = name === mode;
+    tabs[name].classList.toggle("active", active);
+    tabs[name].setAttribute("aria-selected", String(active));
+    panels[name].classList.toggle("hidden", !active);
+  }
+
+  el.challengePanel.classList.toggle("hidden", !inChallenge);
+  el.modeTabs.classList.toggle("hidden", inChallenge);
+  el.challengeLaunchWrap.classList.toggle("hidden", inChallenge);
+  el.scorePanel.classList.toggle("hidden", mode !== "train");
+  el.helpPanel.classList.toggle("hidden", inChallenge);
+
+  if (mode === "lookup") renderLookup();
+  if (mode === "play") renderPlay();
+  if (mode === "challenge") renderChallenge();
 }
 
-function chooseRank(r){
-  if(state.lookupHand.length>=5)return;
-  state.pendingRank=r;
-  state.lookupResults=[];
-  renderLookup();
+
+function dealChallengeHand() {
+  state.challengeHand = deck().slice(0, 5).sort((a, b) => a - b);
+  state.challengeSelected.clear();
 }
 
-function chooseSuit(s){
-  if(state.pendingRank===null||state.lookupHand.length>=5)return;
-  const card=state.pendingRank+1+13*s;
-  if(state.lookupHand.includes(card)){
-    el.lookupPrompt.textContent=`${label(card)} is already in the hand. Choose another suit.`;
+function startChallenge() {
+  if (!state.strategy) return;
+
+  state.challengePreviousMode = state.mode === "challenge" ? "train" : state.mode;
+  state.challengeCompleted = 0;
+  state.challengeCorrect = 0;
+  state.challengeFinished = false;
+  dealChallengeHand();
+  setMode("challenge");
+}
+
+function toggleChallengeCard(card) {
+  if (state.challengeFinished) return;
+  state.challengeSelected.has(card)
+    ? state.challengeSelected.delete(card)
+    : state.challengeSelected.add(card);
+  renderChallenge();
+}
+
+function submitChallengeHold() {
+  if (!state.strategy || state.challengeFinished) return;
+
+  try {
+    const holds = optimal(state.challengeHand);
+    if (holds.some(hold => equal(hold, state.challengeSelected))) {
+      state.challengeCorrect += 1;
+    }
+
+    state.challengeCompleted += 1;
+
+    if (state.challengeCompleted >= CHALLENGE_HANDS) {
+      state.challengeFinished = true;
+    } else {
+      dealChallengeHand();
+    }
+
+    renderChallenge();
+  } catch (error) {
+    console.error(error);
+    window.alert("The strategy lookup failed for this hand. See the browser console.");
+  }
+}
+
+function leaveChallenge() {
+  if (!state.challengeFinished && state.challengeCompleted > 0) {
+    const leave = window.confirm(
+      `Exit the challenge? Your progress through ${state.challengeCompleted} hands will be lost.`
+    );
+    if (!leave) return;
+  }
+
+  const destination = state.challengePreviousMode || "train";
+  state.challengeFinished = false;
+  state.challengeHand = [];
+  state.challengeSelected.clear();
+  setMode(destination);
+}
+
+function renderChallengeCertificate() {
+  const score = state.challengeCorrect;
+  const misses = CHALLENGE_HANDS - score;
+  const percentage = 100 * score / CHALLENGE_HANDS;
+  const passed = score >= CHALLENGE_PASSING_SCORE;
+  const date = new Intl.DateTimeFormat(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date());
+
+  el.challengeSummary.replaceChildren();
+
+  if (passed) {
+    const certificate = document.createElement("div");
+    certificate.className = "certificate";
+    certificate.innerHTML = `
+      <div class="certificate-corner top-left">♠</div>
+      <div class="certificate-corner top-right red">♥</div>
+      <div class="certificate-corner bottom-left red">♦</div>
+      <div class="certificate-corner bottom-right">♣</div>
+      <div class="certificate-small">CERTIFICATE OF VIDEO POKER READINESS</div>
+      <div class="certificate-title">EL JEFE APPROVED</div>
+      <div class="certificate-rule"></div>
+      <p>This certifies that the holder successfully completed the<br>
+      <strong>200-Hand El Jefe Challenge</strong></p>
+      <div class="certificate-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
+      <p class="certificate-declaration">You are now approved to play<br>
+      <strong>Jacks or Better in Las Vegas.</strong></p>
+      <div class="certificate-date">Issued ${date}</div>
+      <div class="certificate-signature">El Jefe</div>
+      <div class="certificate-signature-label">Official Video Poker Authority</div>
+      <div class="certificate-share">Take a screenshot and send it to the group text thread.</div>
+    `;
+    el.challengeSummary.append(certificate);
+  } else {
+    const result = document.createElement("div");
+    result.className = "challenge-fail";
+    result.innerHTML = `
+      <div class="challenge-fail-icon">♠</div>
+      <h2>Not Quite El Jefe Approved</h2>
+      <div class="challenge-final-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
+      <p>You missed ${misses} hands. A passing score is 190 out of 200.</p>
+      <p><strong>You are not quite ready to put money into a Jacks or Better machine.</strong></p>
+      <p>Spend a little more time in Train mode, then try the challenge again.</p>
+    `;
+    el.challengeSummary.append(result);
+  }
+
+  const buttons = document.createElement("div");
+  buttons.className = "challenge-summary-actions";
+
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "primary";
+  retry.textContent = "Try Again";
+  retry.onclick = startChallenge;
+
+  const returnButton = document.createElement("button");
+  returnButton.type = "button";
+  returnButton.textContent = "Return to Trainer";
+  returnButton.onclick = () => {
+    state.challengePreviousMode = "train";
+    leaveChallenge();
+  };
+
+  buttons.append(retry, returnButton);
+  el.challengeSummary.append(buttons);
+}
+
+function renderChallenge() {
+  el.challengeLaunch.disabled = !state.strategy;
+  el.challengeActive.classList.toggle("hidden", state.challengeFinished);
+  el.challengeSummary.classList.toggle("hidden", !state.challengeFinished);
+
+  if (state.challengeFinished) {
+    renderChallengeCertificate();
     return;
   }
+
+  el.challengeProgress.textContent = `Hand ${state.challengeCompleted + 1} of ${CHALLENGE_HANDS}`;
+  el.challengeHand.replaceChildren();
+
+  for (const card of state.challengeHand) {
+    el.challengeHand.append(cardButton(card, {
+      selected: state.challengeSelected.has(card),
+      onClick: () => toggleChallengeCard(card)
+    }));
+  }
+
+  setMadeHand(el.challengeMadeHand, state.challengeHand);
+
+  const kept = state.challengeHand.filter(card => state.challengeSelected.has(card));
+  el.challengeSelection.textContent = kept.length
+    ? "Keep: " + kept.map(label).join(" ")
+    : "Discard all five cards";
+  el.challengeSubmit.disabled = !state.strategy;
+}
+
+function chooseRank(r) {
+  if (state.lookupHand.length >= 5) return;
+  state.pendingRank = r;
+  state.lookupResults = [];
+  renderLookup();
+}
+
+function chooseSuit(s) {
+  if (state.pendingRank === null || state.lookupHand.length >= 5) return;
+  const card = state.pendingRank + 1 + 13 * s;
+
+  if (state.lookupHand.includes(card)) {
+    el.lookupPrompt.textContent = `${label(card)} is already in the hand. Choose another suit.`;
+    return;
+  }
+
   state.lookupHand.push(card);
-  state.lookupHand.sort((a,b)=>a-b);
-  state.pendingRank=null;
-  state.lookupResults=[];
+  state.lookupHand.sort((a, b) => a - b);
+  state.pendingRank = null;
+  state.lookupResults = [];
   renderLookup();
 }
 
-function removeLookupCard(card){
-  state.lookupHand=state.lookupHand.filter(c=>c!==card);
-  state.lookupResults=[];
+function removeLookupCard(card) {
+  state.lookupHand = state.lookupHand.filter(item => item !== card);
+  state.lookupResults = [];
   renderLookup();
 }
 
-function clearLookup(){
-  state.lookupHand=[];
-  state.pendingRank=null;
-  state.lookupResults=[];
+function clearLookup() {
+  state.lookupHand = [];
+  state.pendingRank = null;
+  state.lookupResults = [];
   renderLookup();
 }
 
-function miniCard(card){
-  const span=document.createElement("span");
-  span.className="mini-card"+(suit(card)<2?" red":"");
-  span.textContent=label(card);
+function miniCard(card) {
+  const span = document.createElement("span");
+  span.className = "mini-card" + (suit(card) < 2 ? " red" : "");
+  span.textContent = label(card);
   return span;
 }
 
-function renderLookupResults(){
-  el.lookupFeedback.className="lookup-feedback";
+function renderLookupResults() {
+  el.lookupFeedback.className = "lookup-feedback";
   el.lookupFeedback.replaceChildren();
-  if(!state.lookupResults.length)return;
+  if (!state.lookupResults.length) return;
 
-  const heading=document.createElement("p");
-  heading.className="result-heading";
-  heading.textContent=state.lookupResults.length===1?"Optimal hold":"Tied optimal holds";
+  const heading = document.createElement("p");
+  heading.className = "result-heading";
+  heading.textContent = state.lookupResults.length === 1 ? "Optimal hold" : "Tied optimal holds";
   el.lookupFeedback.append(heading);
 
-  const results=document.createElement("div");
-  results.className="hold-results";
+  const results = document.createElement("div");
+  results.className = "hold-results";
 
-  state.lookupResults.forEach((keeper,index)=>{
-    const box=document.createElement("div");
-    box.className="hold-result";
-    if(state.lookupResults.length>1){
-      const title=document.createElement("div");
-      title.className="hold-result-label";
-      title.textContent=`Option ${index+1}`;
+  state.lookupResults.forEach((keeper, index) => {
+    const box = document.createElement("div");
+    box.className = "hold-result";
+
+    if (state.lookupResults.length > 1) {
+      const title = document.createElement("div");
+      title.className = "hold-result-label";
+      title.textContent = `Option ${index + 1}`;
       box.append(title);
     }
-    const cards=state.lookupHand.filter(c=>keeper.has(c));
-    if(cards.length===0){
-      const discard=document.createElement("span");
-      discard.className="discard-all";
-      discard.textContent="Discard all five cards";
+
+    const cards = state.lookupHand.filter(card => keeper.has(card));
+
+    if (cards.length === 0) {
+      const discard = document.createElement("span");
+      discard.className = "discard-all";
+      discard.textContent = "Discard all five cards";
       box.append(discard);
-    }else{
-      const row=document.createElement("div");
-      row.className="mini-hand";
-      cards.forEach(c=>row.append(miniCard(c)));
+    } else {
+      const row = document.createElement("div");
+      row.className = "mini-hand";
+      cards.forEach(card => row.append(miniCard(card)));
       box.append(row);
     }
+
     results.append(box);
   });
+
   el.lookupFeedback.append(results);
 }
 
-function renderLookup(){
+function renderLookup() {
   el.lookupHand.replaceChildren();
-  state.lookupHand.forEach(c=>el.lookupHand.append(cardButton(c,{onClick:()=>removeLookupCard(c)})));
-  for(let i=state.lookupHand.length;i<5;i++)el.lookupHand.append(cardButton(1,{placeholder:true}));
+  state.lookupHand.forEach(card => el.lookupHand.append(cardButton(card, { onClick: () => removeLookupCard(card) })));
+  for (let i = state.lookupHand.length; i < 5; i += 1) {
+    el.lookupHand.append(cardButton(1, { placeholder: true }));
+  }
 
   el.rankPicker.replaceChildren();
-  RANKS.forEach((r,index)=>{
-    const b=document.createElement("button");
-    b.type="button";b.className="picker-button"+(state.pendingRank===index?" active":"");
-    b.textContent=r;b.disabled=state.lookupHand.length>=5;b.onclick=()=>chooseRank(index);
-    el.rankPicker.append(b);
+  RANKS.forEach((rankLabel, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "picker-button" + (state.pendingRank === index ? " active" : "");
+    button.textContent = rankLabel;
+    button.disabled = state.lookupHand.length >= 5;
+    button.onclick = () => chooseRank(index);
+    el.rankPicker.append(button);
   });
 
   el.suitPicker.replaceChildren();
-  SUITS.forEach((symbol,index)=>{
-    const b=document.createElement("button");
-    b.type="button";
-    b.className="picker-button suit-button"+(index<2?" red":"");
-    b.textContent=symbol;
-    b.disabled=state.pendingRank===null||state.lookupHand.length>=5;
-    b.onclick=()=>chooseSuit(index);
-    el.suitPicker.append(b);
+  SUITS.forEach((symbol, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "picker-button suit-button" + (index < 2 ? " red" : "");
+    button.textContent = symbol;
+    button.disabled = state.pendingRank === null || state.lookupHand.length >= 5;
+    button.onclick = () => chooseSuit(index);
+    el.suitPicker.append(button);
   });
 
-  if(state.lookupHand.length===5){
-    el.lookupPrompt.textContent="Hand complete. Tap a card to remove it, or find the best hold.";
-  }else if(state.pendingRank===null){
-    el.lookupPrompt.textContent=`Choose a rank (${state.lookupHand.length}/5 cards entered)`;
-  }else{
-    el.lookupPrompt.textContent=`Choose the suit for ${RANKS[state.pendingRank]}`;
+  if (state.lookupHand.length === 5) {
+    el.lookupPrompt.textContent = "Hand complete. Tap a card to remove it, or find the best hold.";
+  } else if (state.pendingRank === null) {
+    el.lookupPrompt.textContent = `Choose a rank (${state.lookupHand.length}/5 cards entered)`;
+  } else {
+    el.lookupPrompt.textContent = `Choose the suit for ${RANKS[state.pendingRank]}`;
   }
 
-  el.findHold.disabled=!state.strategy||state.lookupHand.length!==5;
+  el.findHold.disabled = !state.strategy || state.lookupHand.length !== 5;
   renderLookupResults();
 }
 
-function findBestHold(){
-  try{
-    state.lookupResults=optimal(state.lookupHand);
+function findBestHold() {
+  try {
+    state.lookupResults = optimal(state.lookupHand);
     renderLookup();
-  }catch(e){
-    console.error(e);
-    el.lookupFeedback.textContent="Strategy lookup failed for this hand. See the browser console.";
-    el.lookupFeedback.className="lookup-feedback feedback error";
+  } catch (error) {
+    console.error(error);
+    el.lookupFeedback.textContent = "Strategy lookup failed for this hand. See the browser console.";
+    el.lookupFeedback.className = "lookup-feedback feedback error";
   }
 }
 
-async function loadURL(){
+function formatUnits(value) {
+  return `${value} ${Math.abs(value) === 1 ? "unit" : "units"}`;
+}
+
+function togglePlayCard(card) {
+  if (state.playPhase !== "holding") return;
+  state.playHeld.has(card) ? state.playHeld.delete(card) : state.playHeld.add(card);
+  renderPlay();
+}
+
+function startPlayHand() {
+  state.playBalance -= WAGER;
+  savePlayBalance();
+
+  state.playDeck = deck();
+  state.playHand = state.playDeck.slice(0, 5).sort((a, b) => a - b);
+  state.playDeck = state.playDeck.slice(5);
+  state.playHeld.clear();
+  state.playPhase = "holding";
+  playFeedback("", "");
+  renderPlay();
+}
+
+function drawPlayHand() {
+  if (state.playPhase !== "holding") return;
+
+  const heldCards = state.playHand.filter(card => state.playHeld.has(card));
+  const drawCount = 5 - heldCards.length;
+  const drawnCards = state.playDeck.slice(0, drawCount);
+  state.playDeck = state.playDeck.slice(drawCount);
+  state.playHand = [...heldCards, ...drawnCards].sort((a, b) => a - b);
+  state.playPhase = "result";
+
+  const result = evaluateHand(state.playHand);
+  state.playBalance += result.payout;
+  savePlayBalance();
+
+  if (result.payout > 0) {
+    const net = result.payout - WAGER;
+    const netText = net >= 0 ? `+${net}` : String(net);
+    playFeedback(`${result.name} pays ${result.payout} units. Net ${netText} this hand.`, "correct");
+  } else {
+    playFeedback("No winning hand. Net -5 this hand.", "incorrect");
+  }
+
+  renderPlay();
+}
+
+function resetPlayBalance() {
+  state.playBalance = 0;
+  state.playPhase = "idle";
+  state.playHand = [];
+  state.playDeck = [];
+  state.playHeld.clear();
+  savePlayBalance();
+  playFeedback("Balance reset to zero.", "");
+  renderPlay();
+}
+
+function playAction() {
+  if (state.playPhase === "holding") drawPlayHand();
+  else startPlayHand();
+}
+
+function renderPlay() {
+  el.playBalance.textContent = formatUnits(state.playBalance);
+  el.playBalance.classList.toggle("negative", state.playBalance < 0);
+  el.playBalance.classList.toggle("positive", state.playBalance > 0);
+
+  el.playHand.replaceChildren();
+
+  if (state.playHand.length === 0) {
+    for (let i = 0; i < 5; i += 1) {
+      el.playHand.append(cardButton(1, { placeholder: true }));
+    }
+  } else {
+    for (const card of state.playHand) {
+      el.playHand.append(cardButton(card, {
+        selected: state.playHeld.has(card),
+        disabled: state.playPhase !== "holding",
+        onClick: () => togglePlayCard(card)
+      }));
+    }
+  }
+
+  if (state.playPhase === "idle") {
+    el.playMadeHand.textContent = "";
+    el.playMadeHand.classList.remove("visible");
+    el.playSelection.textContent = "Press Deal to begin.";
+    el.playAction.textContent = "Deal (-5)";
+  } else {
+    setMadeHand(el.playMadeHand, state.playHand);
+
+    if (state.playPhase === "holding") {
+      const held = state.playHand.filter(card => state.playHeld.has(card));
+      el.playSelection.textContent = held.length ? "Hold: " + held.map(label).join(" ") : "Discard all five cards";
+      el.playAction.textContent = "Draw";
+    } else {
+      el.playSelection.textContent = "Hand complete.";
+      el.playAction.textContent = "Deal Next Hand (-5)";
+    }
+  }
+}
+
+async function loadURL() {
   status("Loading strategy...");
-  const r=await fetch("./JacksOrBetterStrategy.json");
-  if(!r.ok)throw new Error(r.status);
-  state.strategy=await r.json();
+  const response = await fetch("./JacksOrBetterStrategy.json");
+  if (!response.ok) throw new Error(response.status);
+  state.strategy = await response.json();
   status(`Ready - ${Object.keys(state.strategy).length.toLocaleString()} hands loaded`);
-  renderTraining();renderLookup();
+  el.challengeLaunch.disabled = false;
+  renderTraining();
+  renderLookup();
+  renderChallenge();
 }
 
-async function loadFile(file){
+async function loadFile(file) {
   status("Reading selected strategy file...");
-  state.strategy=JSON.parse(await file.text());
+  state.strategy = JSON.parse(await file.text());
   status(`Ready - ${Object.keys(state.strategy).length.toLocaleString()} hands loaded`);
-  renderTraining();renderLookup();
+  el.challengeLaunch.disabled = false;
+  renderTraining();
+  renderLookup();
+  renderChallenge();
 }
 
-el.trainTab.onclick=()=>setMode("train");
-el.lookupTab.onclick=()=>setMode("lookup");
-el.check.onclick=check;
-el.newHand.onclick=deal;
-el.reset.onclick=()=>{state.attempts=0;state.correct=0;save();renderTraining();};
-el.findHold.onclick=findBestHold;
-el.clearLookup.onclick=clearLookup;
-el.file.onchange=async e=>{
-  const f=e.target.files[0];if(!f)return;
-  try{await loadFile(f);}catch(err){console.error(err);status("That file could not be read as strategy JSON.","error");}
+el.trainTab.onclick = () => setMode("train");
+el.lookupTab.onclick = () => setMode("lookup");
+el.playTab.onclick = () => setMode("play");
+el.challengeLaunch.onclick = startChallenge;
+el.challengeSubmit.onclick = submitChallengeHold;
+el.exitChallenge.onclick = leaveChallenge;
+el.check.onclick = check;
+el.newHand.onclick = deal;
+el.reset.onclick = () => {
+  state.attempts = 0;
+  state.correct = 0;
+  saveTrainingScore();
+  renderTraining();
+};
+el.findHold.onclick = findBestHold;
+el.clearLookup.onclick = clearLookup;
+el.playAction.onclick = playAction;
+el.resetBalance.onclick = resetPlayBalance;
+el.file.onchange = async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    await loadFile(file);
+  } catch (error) {
+    console.error(error);
+    status("That file could not be read as strategy JSON.", "error");
+  }
 };
 
-deal();renderLookup();
-loadURL().catch(e=>{
-  console.error(e);
-  status("Strategy file not found. Put JacksOrBetterStrategy.json beside index.html, or load it below.","error");
+deal();
+renderLookup();
+renderPlay();
+renderChallenge();
+
+loadURL().catch(error => {
+  console.error(error);
+  status("Strategy file not found. Put JacksOrBetterStrategy.json beside index.html, or load it below.", "error");
 });
 
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+  });
 }

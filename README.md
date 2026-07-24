@@ -1,47 +1,46 @@
-# Jacks or Better Trainer Web App
+# El Jefe's Video Poker Practice
 
-This version has two modes:
+This version has three normal modes plus the El Jefe Challenge:
 
-- **Train:** receive a random hand, choose the cards to hold, and track accuracy.
-- **Look Up:** enter a real hand by tapping a rank and then a suit, and display every tied optimal hold.
+- **Train** — choose the optimal hold and track accuracy.
+- **Look Up** — enter any five-card hand and view the optimal hold.
+- **Play** — wager five units, hold cards, draw replacements, and track a running balance.
+- **El Jefe Challenge** — complete 200 hands without answer feedback. A score of 190/200 or better earns an El Jefe Approved certificate.
 
-## Put your strategy file here
+Train, Play, and Challenge display the name of a paying made hand above the cards.
 
-Copy your exported file into this folder and make sure its exact name is:
+## Required strategy file
+
+Copy your Mathematica export into this folder using the exact filename:
 
 `JacksOrBetterStrategy.json`
 
-## Test it on Windows
+## Test locally on Windows
 
-Do not double-click `index.html`; browsers usually block JSON loading from a
-`file://` page.
+Open PowerShell in this folder and run:
 
-1. Open this folder in File Explorer.
-2. Click the address bar, type `powershell`, and press Enter.
-3. Run:
+`py -m http.server 8000`
 
-   `py -m http.server 8000`
+Then open:
 
-4. Open:
+`http://localhost:8000`
 
-   `http://localhost:8000`
+## Update GitHub Pages
 
-5. Confirm that the page reports the number of loaded strategy hands.
+Replace the existing app files in the repository with these files, while keeping
+`JacksOrBetterStrategy.json`. Commit the changes to the branch used by GitHub Pages.
+The service-worker cache name is `jacks-trainer-v4`, allowing the new version to replace older cached files.
 
-## Put it online with GitHub Pages
+## Play-mode paytable
 
-1. Create a public GitHub repository.
-2. Upload every file in this folder, including the strategy JSON.
-3. Open **Settings > Pages**.
-4. Under Build and deployment, choose **Deploy from a branch**.
-5. Select the `main` branch and the `/ (root)` folder, then save.
+The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 
-## Install it on iPhone
-
-1. Open the published address in Safari.
-2. Tap Share.
-3. Tap Add to Home Screen.
-4. Turn on Open as Web App if that option appears.
-5. Tap Add.
-
-Open it once while online so its resources can be cached.
+- Royal Flush: 4000
+- Straight Flush: 250
+- Four of a Kind: 125
+- Full House: 45
+- Flush: 30
+- Straight: 20
+- Three of a Kind: 15
+- Two Pair: 10
+- Jacks or Better: 5

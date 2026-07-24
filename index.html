@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Jacks Trainer">
-  <title>Jacks or Better Trainer</title>
+  <title>El Jefe's Video Poker Practice</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -15,18 +15,27 @@
 <body>
   <main class="app">
     <header>
-      <div class="eyebrow">VIDEO POKER PRACTICE</div>
+      <div class="eyebrow">EL JEFE'S VIDEO POKER PRACTICE</div>
       <h1>Jacks or Better</h1>
       <div id="status" class="status">Loading strategy...</div>
     </header>
 
-    <nav class="mode-tabs" aria-label="App mode">
+    <div id="challengeLaunchWrap" class="challenge-launch">
+      <button id="challengeLaunch" class="challenge-button" type="button" disabled>
+        <span>Take the</span>
+        <strong>El Jefe Challenge</strong>
+      </button>
+    </div>
+
+    <nav id="modeTabs" class="mode-tabs" aria-label="App mode">
       <button id="trainTab" class="mode-tab active" type="button" aria-selected="true">Train</button>
       <button id="lookupTab" class="mode-tab" type="button" aria-selected="false">Look Up</button>
+      <button id="playTab" class="mode-tab" type="button" aria-selected="false">Play</button>
     </nav>
 
     <section id="trainPanel" class="panel">
       <p>Tap the cards you would keep, then check your answer.</p>
+      <div id="trainMadeHand" class="made-hand" aria-live="polite"></div>
       <div id="hand" class="hand"></div>
       <div id="selection" class="selection">Discard all five cards</div>
       <div class="actions">
@@ -60,13 +69,71 @@
       <div id="lookupFeedback" class="lookup-feedback" aria-live="polite"></div>
     </section>
 
+    <section id="playPanel" class="panel hidden">
+      <div class="play-stats" aria-label="Play statistics">
+        <div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
+        <div><small>BET</small><strong>5 units</strong></div>
+      </div>
+
+      <p>Deal, tap the cards you want to hold, then draw.</p>
+      <div id="playMadeHand" class="made-hand" aria-live="polite"></div>
+      <div id="playHand" class="hand" aria-label="Current play hand"></div>
+      <div id="playSelection" class="selection">Press Deal to begin.</div>
+
+      <div class="actions">
+        <button id="playAction" class="primary">Deal (-5)</button>
+        <button id="resetBalance">Reset Balance</button>
+      </div>
+
+      <div id="playFeedback" class="feedback" aria-live="polite"></div>
+
+      <details class="paytable">
+        <summary>5-unit paytable</summary>
+        <div class="paytable-grid">
+          <span>Royal Flush</span><strong>4000</strong>
+          <span>Straight Flush</span><strong>250</strong>
+          <span>Four of a Kind</span><strong>125</strong>
+          <span>Full House</span><strong>45</strong>
+          <span>Flush</span><strong>30</strong>
+          <span>Straight</span><strong>20</strong>
+          <span>Three of a Kind</span><strong>15</strong>
+          <span>Two Pair</span><strong>10</strong>
+          <span>Jacks or Better</span><strong>5</strong>
+        </div>
+      </details>
+    </section>
+
+
+    <section id="challengePanel" class="panel challenge-panel hidden">
+      <div id="challengeActive">
+        <div class="challenge-heading-row">
+          <div>
+            <div class="challenge-kicker">EL JEFE CHALLENGE</div>
+            <h2 id="challengeProgress">Hand 1 of 200</h2>
+          </div>
+          <button id="exitChallenge" class="challenge-exit" type="button">Exit</button>
+        </div>
+
+        <p>Choose the optimal hold and lock it in. Your answers stay secret until all 200 hands are complete.</p>
+        <div id="challengeMadeHand" class="made-hand" aria-live="polite"></div>
+        <div id="challengeHand" class="hand" aria-label="El Jefe Challenge hand"></div>
+        <div id="challengeSelection" class="selection">Discard all five cards</div>
+
+        <div class="actions">
+          <button id="challengeSubmit" class="primary" type="button" disabled>Lock In Hold</button>
+        </div>
+      </div>
+
+      <div id="challengeSummary" class="challenge-summary hidden" aria-live="polite"></div>
+    </section>
+
     <section id="scorePanel" class="score">
       <div><small>SCORE</small><strong id="score">0 / 0</strong></div>
       <div><small>PERCENTAGE</small><strong id="percentage">0.0%</strong></div>
       <button id="reset" class="link">Reset score</button>
     </section>
 
-    <details class="help">
+    <details id="helpPanel" class="help">
       <summary>Strategy file help</summary>
       <p>Keep <code>JacksOrBetterStrategy.json</code> in the same folder as this page.</p>
       <label for="file">Or load the JSON manually:</label>
