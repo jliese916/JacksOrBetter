@@ -56,6 +56,7 @@ const el = {
   suitPicker: document.querySelector("#suitPicker"),
   findHold: document.querySelector("#findHold"),
   clearLookup: document.querySelector("#clearLookup"),
+  importFromPlay: document.querySelector("#importFromPlay"),
   lookupFeedback: document.querySelector("#lookupFeedback"),
   playBalance: document.querySelector("#playBalance"),
   playMadeHand: document.querySelector("#playMadeHand"),
@@ -573,6 +574,15 @@ function miniCard(card) {
   return span;
 }
 
+function importPlayHand() {
+  if (state.playHand.length !== 5 || ["dealing", "drawing"].includes(state.playPhase)) return;
+
+  state.lookupHand = [...state.playHand];
+  state.pendingRank = null;
+  state.lookupResults = [];
+  renderLookup();
+}
+
 function renderLookupResults() {
   el.lookupFeedback.className = "lookup-feedback";
   el.lookupFeedback.replaceChildren();
@@ -655,6 +665,8 @@ function renderLookup() {
   }
 
   el.findHold.disabled = !state.strategy || state.lookupHand.length !== 5;
+  el.importFromPlay.disabled =
+    state.playHand.length !== 5 || ["dealing", "drawing"].includes(state.playPhase);
   renderLookupResults();
 }
 
@@ -683,7 +695,9 @@ function sleep(milliseconds) {
   return new Promise(resolve => window.setTimeout(resolve, milliseconds));
 }
 
-function startPlayHand() {
+async function startPlayHand() {
+  if (["dealing", "drawing"].includes(state.playPhase)) return;
+
   state.playBalance -= WAGER;
   savePlayBalance();
 
@@ -691,10 +705,21 @@ function startPlayHand() {
   state.playHand = state.playDeck.slice(0, 5);
   state.playDeck = state.playDeck.slice(5);
   state.playHeld.clear();
-  state.playHiddenPositions.clear();
-  state.playPhase = "holding";
+  state.playHiddenPositions = new Set([0, 1, 2, 3, 4]);
+  state.playPhase = "dealing";
   playFeedback("", "");
   renderPlay();
+  renderLookup();
+
+  for (let position = 0; position < 5; position += 1) {
+    await sleep(115);
+    state.playHiddenPositions.delete(position);
+    renderPlay();
+  }
+
+  state.playPhase = "holding";
+  renderPlay();
+  renderLookup();
 }
 
 async function drawPlayHand() {
@@ -736,6 +761,7 @@ async function drawPlayHand() {
   }
 
   renderPlay();
+  renderLookup();
 }
 
 function resetPlayBalance() {
@@ -748,11 +774,12 @@ function resetPlayBalance() {
   savePlayBalance();
   playFeedback("Balance reset to zero.", "");
   renderPlay();
+  renderLookup();
 }
 
 function playAction() {
   if (state.playPhase === "holding") drawPlayHand();
-  else if (state.playPhase !== "drawing") startPlayHand();
+  else if (!["dealing", "drawing"].includes(state.playPhase)) startPlayHand();
 }
 
 function renderPlay() {
@@ -777,12 +804,20 @@ function renderPlay() {
     });
   }
 
+  el.resetBalance.disabled = ["dealing", "drawing"].includes(state.playPhase);
+
   if (state.playPhase === "idle") {
     el.playMadeHand.textContent = "";
     el.playMadeHand.classList.remove("visible");
     el.playSelection.textContent = "Press Deal to begin.";
     el.playAction.textContent = "Deal (-5)";
     el.playAction.disabled = false;
+  } else if (state.playPhase === "dealing") {
+    el.playMadeHand.textContent = "";
+    el.playMadeHand.classList.remove("visible");
+    el.playSelection.textContent = "Dealing...";
+    el.playAction.textContent = "Dealing...";
+    el.playAction.disabled = true;
   } else if (state.playPhase === "drawing") {
     el.playMadeHand.textContent = "";
     el.playMadeHand.classList.remove("visible");
@@ -842,6 +877,7 @@ el.reset.onclick = () => {
 };
 el.findHold.onclick = findBestHold;
 el.clearLookup.onclick = clearLookup;
+el.importFromPlay.onclick = importPlayHand;
 el.playAction.onclick = playAction;
 el.resetBalance.onclick = resetPlayBalance;
 el.file.onchange = async event => {

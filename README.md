@@ -66,3 +66,12 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 - Clubs are green and spades are black.
 - Card ranks are slightly larger without changing card dimensions.
 - Training score and percentage are contained inside Train mode only.
+
+
+## Version 8 changes
+
+- Lookup can import the current active Play hand without disturbing Play state.
+- Suit-picker symbols use the four-color deck colors.
+- Initial Play deals reveal from left to right.
+- Reset Balance is separated from the main play control.
+- Card ranks are slightly larger.
