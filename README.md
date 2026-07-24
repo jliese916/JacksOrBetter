@@ -107,4 +107,4 @@ The Play balance chart now displays the current difference between the optimal-p
 - Added a footer link to the Blackjack trainer.
 - Service-worker cache: `el-jefe-jacks-trainer-v13`.
 
-The footer currently assumes the blackjack repository is named `blackjack-trainer`. Edit the link in `index.html` if your repository uses another name.
+The footer links to `https://jliese916.github.io/BlackJackTrainer/`.
