@@ -29,7 +29,7 @@ Then open:
 
 Replace the existing app files in the repository with these files, while keeping
 `JacksOrBetterStrategy.json`. Commit the changes to the branch used by GitHub Pages.
-The service-worker cache name is `jacks-trainer-v4`, allowing the new version to replace older cached files.
+The service-worker cache name is `jacks-trainer-v10`, allowing the new version to replace older cached files.
 
 ## Play-mode paytable
 
@@ -80,3 +80,8 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 ## Version 9
 
 Play mode now tracks optimal-decision accuracy for the current balance session and displays a running balance chart. The chart records the balance after each completed hand, uses a dotted zero line, and colors results green above zero and red below zero. Reset Balance also resets Play accuracy and chart history.
+
+
+## Version 10
+
+Play accuracy now gives immediate decision feedback: a green plus pulses beside the percentage after an optimal hold, while a red minus pulses after a non-optimal hold. The indicator then settles to a dim state until the next hand. Reset Balance clears it along with the Play session statistics.

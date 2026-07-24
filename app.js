@@ -60,6 +60,7 @@ const el = {
   lookupFeedback: document.querySelector("#lookupFeedback"),
   playBalance: document.querySelector("#playBalance"),
   playAccuracy: document.querySelector("#playAccuracy"),
+  playDecisionIndicator: document.querySelector("#playDecisionIndicator"),
   playBalanceChart: document.querySelector("#playBalanceChart"),
   playChartSummary: document.querySelector("#playChartSummary"),
   playMadeHand: document.querySelector("#playMadeHand"),
@@ -267,6 +268,26 @@ function feedback(message, type) {
 function playFeedback(message, type = "") {
   el.playFeedback.textContent = message;
   el.playFeedback.className = "feedback" + (type ? " " + type : "");
+}
+
+function clearPlayDecisionIndicator() {
+  el.playDecisionIndicator.textContent = "";
+  el.playDecisionIndicator.className = "play-decision-indicator";
+  el.playDecisionIndicator.setAttribute("aria-label", "");
+}
+
+function flashPlayDecisionIndicator(wasCorrect) {
+  const symbol = wasCorrect ? "+" : "−";
+  const resultClass = wasCorrect ? "correct" : "incorrect";
+  const spokenText = wasCorrect ? "Optimal hold" : "Non-optimal hold";
+
+  el.playDecisionIndicator.textContent = symbol;
+  el.playDecisionIndicator.setAttribute("aria-label", spokenText);
+
+  // Remove the animation classes first so repeated identical results pulse again.
+  el.playDecisionIndicator.className = "play-decision-indicator";
+  void el.playDecisionIndicator.offsetWidth;
+  el.playDecisionIndicator.classList.add("visible", resultClass, "pulse");
 }
 
 function canonicalize(hand) {
@@ -726,6 +747,7 @@ async function startPlayHand() {
   state.playHiddenPositions = new Set([0, 1, 2, 3, 4]);
   state.playPhase = "dealing";
   playFeedback("", "");
+  clearPlayDecisionIndicator();
   renderPlay();
   renderLookup();
 
@@ -796,6 +818,10 @@ async function drawPlayHand() {
 
   renderPlay();
   renderLookup();
+
+  if (decisionWasCorrect !== null) {
+    flashPlayDecisionIndicator(decisionWasCorrect);
+  }
 }
 
 function resetPlayBalance() {
@@ -810,6 +836,7 @@ function resetPlayBalance() {
   state.playHiddenPositions.clear();
   savePlaySession();
   playFeedback("Balance reset to zero.", "");
+  clearPlayDecisionIndicator();
   renderPlay();
   renderLookup();
 }

@@ -82,7 +82,13 @@
     <section id="playPanel" class="panel hidden">
       <div class="play-stats" aria-label="Play statistics">
         <div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
-        <div><small>ACCURACY</small><strong id="playAccuracy">0.0%</strong></div>
+        <div class="play-accuracy-stat">
+          <small>ACCURACY</small>
+          <span class="play-accuracy-line">
+            <strong id="playAccuracy">0.0%</strong>
+            <span id="playDecisionIndicator" class="play-decision-indicator" aria-live="polite"></span>
+          </span>
+        </div>
         <div><small>BET</small><strong>5 units</strong></div>
       </div>
 
