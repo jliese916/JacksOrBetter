@@ -1,7 +1,7 @@
 {
-  "name": "El Jefe's Video Poker Practice",
-  "short_name": "El Jefe Poker",
-  "description": "Practice, play, look up hands, and take the 200-hand El Jefe Challenge for Jacks or Better.",
+  "name": "El Jefe's Jacks or Better Trainer",
+  "short_name": "El Jefe Jacks",
+  "description": "Train, look up, and play full-pay 9/6 Jacks or Better at max bet, with bankroll and optimal-play comparisons.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

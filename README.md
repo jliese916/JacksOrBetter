@@ -1,4 +1,4 @@
-# El Jefe's Video Poker Practice
+# El Jefe's Jacks or Better Trainer
 
 This version has three normal modes plus the El Jefe Challenge:
 
@@ -95,3 +95,16 @@ The Play chart now overlays a gray optimal-play shadow line. For each completed 
 ## Version 12
 
 The Play balance chart now displays the current difference between the optimal-play shadow balance and the player's balance. A bracket connects the latest two values and labels the signed difference in units; overlapping lines display `0 units`.
+
+
+## Version 13 changes
+
+- Renamed the app to **El Jefe's Jacks or Better Trainer**.
+- Added the full-pay 9/6, max-bet profile beneath the title.
+- Renamed the Play chart to **Bankroll history**.
+- Added a signed **Optimal − you** summary pill above the chart.
+- Moved reset into a **Session controls** dropdown.
+- Added a footer link to the Blackjack trainer.
+- Service-worker cache: `el-jefe-jacks-trainer-v13`.
+
+The footer currently assumes the blackjack repository is named `blackjack-trainer`. Edit the link in `index.html` if your repository uses another name.

@@ -63,6 +63,7 @@ const el = {
   playDecisionIndicator: document.querySelector("#playDecisionIndicator"),
   playBalanceChart: document.querySelector("#playBalanceChart"),
   playChartSummary: document.querySelector("#playChartSummary"),
+  playDeltaSummary: document.querySelector("#playDeltaSummary"),
   playMadeHand: document.querySelector("#playMadeHand"),
   playHand: document.querySelector("#playHand"),
   playSelection: document.querySelector("#playSelection"),
@@ -751,6 +752,12 @@ function formatUnits(value) {
   return `${value} ${Math.abs(value) === 1 ? "unit" : "units"}`;
 }
 
+function deltaLabel(value) {
+  const rounded = Math.round(value * 10) / 10;
+  if (rounded === 0) return "0 units";
+  return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded)} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
+}
+
 function togglePlayCard(card) {
   if (state.playPhase !== "holding") return;
   state.playHeld.has(card) ? state.playHeld.delete(card) : state.playHeld.add(card);
@@ -880,6 +887,7 @@ async function drawPlayHand() {
 }
 
 function resetPlayBalance() {
+  if (!window.confirm("Reset the balance, accuracy, and bankroll history?")) return;
   state.playBalance = 0;
   state.playOptimalBalance = 0;
   state.playAttempts = 0;
@@ -892,7 +900,7 @@ function resetPlayBalance() {
   state.playHeld.clear();
   state.playHiddenPositions.clear();
   savePlaySession();
-  playFeedback("Balance reset to zero.", "");
+  playFeedback("Balance and history reset to zero.", "");
   clearPlayDecisionIndicator();
   renderPlay();
   renderLookup();
@@ -1095,6 +1103,10 @@ function renderPlay() {
   const playAccuracy = state.playAttempts ? 100 * state.playCorrect / state.playAttempts : 0;
   el.playAccuracy.textContent = playAccuracy.toFixed(1) + "%";
   el.playChartSummary.textContent = `${state.playAttempts} completed ${state.playAttempts === 1 ? "hand" : "hands"}`;
+  const delta = Math.round((state.playOptimalBalance - state.playBalance) * 10) / 10;
+  el.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
+  el.playDeltaSummary.classList.toggle("ahead", delta > 0);
+  el.playDeltaSummary.classList.toggle("behind", delta < 0);
   window.requestAnimationFrame(drawBalanceChart);
 
   el.playHand.replaceChildren();

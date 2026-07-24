@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Jacks Trainer">
-  <title>El Jefe's Video Poker Practice</title>
+  <meta name="apple-mobile-web-app-title" content="El Jefe Jacks">
+  <title>El Jefe's Jacks or Better Trainer</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -15,8 +15,9 @@
 <body>
   <main class="app">
     <header>
-      <div class="eyebrow">EL JEFE'S VIDEO POKER PRACTICE</div>
-      <h1>Jacks or Better</h1>
+      <div class="eyebrow">VIDEO POKER PRACTICE</div>
+      <h1>El Jefe's Jacks or Better Trainer</h1>
+      <p class="rule-summary">Full-pay 9/6 Jacks or Better · max bet (5 units) · see the paytable in Play</p>
       <div id="status" class="status">Loading strategy...</div>
     </header>
 
@@ -94,13 +95,14 @@
 
       <section class="balance-chart-card" aria-label="Running balance chart">
         <div class="balance-chart-heading">
-          <span>Running balance</span>
+          <span>Bankroll history</span>
           <small id="playChartSummary">0 completed hands</small>
         </div>
         <div class="balance-chart-legend" aria-hidden="true">
           <span><i class="legend-line legend-actual"></i>Your play</span>
           <span><i class="legend-line legend-optimal"></i>Optimal play</span>
         </div>
+        <div id="playDeltaSummary" class="chart-delta-pill">Optimal − you: 0 units</div>
         <canvas id="playBalanceChart" class="balance-chart" role="img" aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards"></canvas>
       </section>
 
@@ -130,9 +132,10 @@
         </div>
       </details>
 
-      <div class="play-secondary-actions">
-        <button id="resetBalance" class="reset-balance-button" type="button">Reset Balance</button>
-      </div>
+      <details class="play-settings">
+        <summary>Session controls</summary>
+        <button id="resetBalance" class="danger-link" type="button">Reset balance and history</button>
+      </details>
     </section>
 
 
@@ -166,6 +169,11 @@
       <label for="file">Or load the JSON manually:</label>
       <input id="file" type="file" accept=".json,application/json">
     </details>
+
+    <footer>
+      <a class="footer-link" href="../blackjack-trainer/">Open El Jefe's Blackjack Trainer</a>
+      <p>Strategy profile: full-pay 9/6 Jacks or Better at the 5-unit maximum wager. See the complete paytable in Play.</p>
+    </footer>
   </main>
   <script src="./app.js" defer></script>
 </body>
