@@ -85,6 +85,7 @@ const state = {
   playHand: [],
   playDeck: [],
   playHeld: new Set(),
+  playHiddenPositions: new Set(),
 
   challengePreviousMode: "train",
   challengeHand: [],
@@ -166,17 +167,20 @@ function toggle(card) {
   renderTraining();
 }
 
-function cardButton(card, { selected = false, disabled = false, onClick = null, placeholder = false } = {}) {
+function cardButton(card, { selected = false, disabled = false, onClick = null, placeholder = false, cardBack = false } = {}) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "card" +
     (placeholder ? " placeholder" : "") +
-    (suit(card) < 2 && !placeholder ? " red" : "") +
+    (cardBack ? " card-back" : "") +
+    (suit(card) < 2 && !placeholder && !cardBack ? " red" : "") +
     (selected ? " selected" : "");
-  button.textContent = placeholder ? "+" : label(card);
-  button.disabled = disabled || placeholder;
+  button.textContent = placeholder ? "+" : cardBack ? "" : label(card);
+  button.disabled = disabled || placeholder || cardBack;
 
-  if (!placeholder) {
+  if (cardBack) {
+    button.setAttribute("aria-label", "Drawing card");
+  } else if (!placeholder) {
     button.setAttribute("aria-label", label(card));
     button.setAttribute("aria-pressed", String(selected));
     if (onClick) button.onclick = onClick;
@@ -515,7 +519,6 @@ function chooseSuit(s) {
   }
 
   state.lookupHand.push(card);
-  state.lookupHand.sort((a, b) => a - b);
   state.pendingRank = null;
   state.lookupResults = [];
   renderLookup();
@@ -647,39 +650,60 @@ function togglePlayCard(card) {
   renderPlay();
 }
 
+function sleep(milliseconds) {
+  return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+}
+
 function startPlayHand() {
   state.playBalance -= WAGER;
   savePlayBalance();
 
   state.playDeck = deck();
-  state.playHand = state.playDeck.slice(0, 5).sort((a, b) => a - b);
+  state.playHand = state.playDeck.slice(0, 5);
   state.playDeck = state.playDeck.slice(5);
   state.playHeld.clear();
+  state.playHiddenPositions.clear();
   state.playPhase = "holding";
   playFeedback("", "");
   renderPlay();
 }
 
-function drawPlayHand() {
+async function drawPlayHand() {
   if (state.playPhase !== "holding") return;
 
-  const heldCards = state.playHand.filter(card => state.playHeld.has(card));
-  const drawCount = 5 - heldCards.length;
-  const drawnCards = state.playDeck.slice(0, drawCount);
-  state.playDeck = state.playDeck.slice(drawCount);
-  state.playHand = [...heldCards, ...drawnCards].sort((a, b) => a - b);
+  const replacementPositions = state.playHand
+    .map((card, index) => state.playHeld.has(card) ? -1 : index)
+    .filter(index => index >= 0);
+
+  const drawnCards = state.playDeck.slice(0, replacementPositions.length);
+  state.playDeck = state.playDeck.slice(replacementPositions.length);
+
+  replacementPositions.forEach((position, index) => {
+    state.playHand[position] = drawnCards[index];
+  });
+
+  state.playPhase = "drawing";
+  state.playHiddenPositions = new Set(replacementPositions);
+  playFeedback("", "");
+  renderPlay();
+
+  for (const position of replacementPositions) {
+    await sleep(140);
+    state.playHiddenPositions.delete(position);
+    renderPlay();
+  }
+
   state.playPhase = "result";
+  state.playHeld.clear();
 
   const result = evaluateHand(state.playHand);
   state.playBalance += result.payout;
   savePlayBalance();
 
   if (result.payout > 0) {
-    const net = result.payout - WAGER;
-    const netText = net >= 0 ? `+${net}` : String(net);
-    playFeedback(`${result.name} pays ${result.payout} units. Net ${netText} this hand.`, "correct");
+    playFeedback(`${result.name} pays ${result.payout} units.`, "correct");
   } else {
-    playFeedback("No winning hand. Net -5 this hand.", "incorrect");
+    playFeedback("Pays 0 units.", "incorrect");
   }
 
   renderPlay();
@@ -691,6 +715,7 @@ function resetPlayBalance() {
   state.playHand = [];
   state.playDeck = [];
   state.playHeld.clear();
+  state.playHiddenPositions.clear();
   savePlayBalance();
   playFeedback("Balance reset to zero.", "");
   renderPlay();
@@ -698,7 +723,7 @@ function resetPlayBalance() {
 
 function playAction() {
   if (state.playPhase === "holding") drawPlayHand();
-  else startPlayHand();
+  else if (state.playPhase !== "drawing") startPlayHand();
 }
 
 function renderPlay() {
@@ -713,13 +738,14 @@ function renderPlay() {
       el.playHand.append(cardButton(1, { placeholder: true }));
     }
   } else {
-    for (const card of state.playHand) {
+    state.playHand.forEach((card, index) => {
       el.playHand.append(cardButton(card, {
-        selected: state.playHeld.has(card),
+        selected: state.playPhase === "holding" && state.playHeld.has(card),
         disabled: state.playPhase !== "holding",
+        cardBack: state.playHiddenPositions.has(index),
         onClick: () => togglePlayCard(card)
       }));
-    }
+    });
   }
 
   if (state.playPhase === "idle") {
@@ -727,8 +753,16 @@ function renderPlay() {
     el.playMadeHand.classList.remove("visible");
     el.playSelection.textContent = "Press Deal to begin.";
     el.playAction.textContent = "Deal (-5)";
+    el.playAction.disabled = false;
+  } else if (state.playPhase === "drawing") {
+    el.playMadeHand.textContent = "";
+    el.playMadeHand.classList.remove("visible");
+    el.playSelection.textContent = "Drawing...";
+    el.playAction.textContent = "Drawing...";
+    el.playAction.disabled = true;
   } else {
     setMadeHand(el.playMadeHand, state.playHand);
+    el.playAction.disabled = false;
 
     if (state.playPhase === "holding") {
       const held = state.playHand.filter(card => state.playHeld.has(card));

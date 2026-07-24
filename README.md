@@ -44,3 +44,11 @@ The app uses full-pay 9/6 Jacks or Better payouts for a five-unit wager:
 - Three of a Kind: 15
 - Two Pair: 10
 - Jacks or Better: 5
+
+## Version 5 interface changes
+
+- Lookup cards remain in the order entered.
+- Play cards remain in their original machine positions.
+- Discarded cards turn into blue card backs and reveal left to right.
+- Play feedback reports only the payout, without a net-this-hand sentence.
+- Training score controls appear only in Train mode.
