@@ -1,4 +1,4 @@
-const CACHE_NAME = "el-jefe-jacks-trainer-v15";
+const CACHE_NAME = "el-jefe-jacks-trainer-v16";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,7 +7,8 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./JacksOrBetterStrategy.json"
 ];
 
 self.addEventListener("install", event => {

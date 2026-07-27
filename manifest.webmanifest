@@ -1,7 +1,7 @@
 {
   "name": "El Jefe's Jacks or Better Trainer",
   "short_name": "El Jefe Jacks",
-  "description": "Train, look up, and play full-pay 9/6 Jacks or Better at max bet, with bankroll and optimal-play comparisons.",
+  "description": "Play, train, and look up full-pay 9/6 Jacks or Better at max bet, with a complete strategy ladder and session review.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

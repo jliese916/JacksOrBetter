@@ -20,6 +20,8 @@ const PAYTABLE = {
 
 const el = {
   status: document.querySelector("#status"),
+  paytableDetails: document.querySelector("#paytableDetails"),
+  footerPaytableLink: document.querySelector("#footerPaytableLink"),
   trainTab: document.querySelector("#trainTab"),
   lookupTab: document.querySelector("#lookupTab"),
   playTab: document.querySelector("#playTab"),
@@ -49,8 +51,6 @@ const el = {
   score: document.querySelector("#score"),
   percentage: document.querySelector("#percentage"),
   reset: document.querySelector("#reset"),
-  helpPanel: document.querySelector("#helpPanel"),
-  file: document.querySelector("#file"),
   lookupHand: document.querySelector("#lookupHand"),
   lookupPrompt: document.querySelector("#lookupPrompt"),
   rankPicker: document.querySelector("#rankPicker"),
@@ -70,12 +70,15 @@ const el = {
   playSelection: document.querySelector("#playSelection"),
   playAction: document.querySelector("#playAction"),
   resetBalance: document.querySelector("#resetBalance"),
+  playMissedDetails: document.querySelector("#playMissedDetails"),
+  playMissedCount: document.querySelector("#playMissedCount"),
+  playMissedList: document.querySelector("#playMissedList"),
   playFeedback: document.querySelector("#playFeedback")
 };
 
 const state = {
   strategy: null,
-  mode: "train",
+  mode: "play",
 
   hand: [],
   selected: new Set(),
@@ -130,8 +133,17 @@ const state = {
   playDeck: [],
   playHeld: new Set(),
   playHiddenPositions: new Set(),
+  playMisses: (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jacksPlayMisses") || "[]");
+      if (Array.isArray(saved)) return saved;
+    } catch (error) {
+      console.warn("Could not read saved Play missed hands.", error);
+    }
+    return [];
+  })(),
 
-  challengePreviousMode: "train",
+  challengePreviousMode: "play",
   challengeHand: [],
   challengeSelected: new Set(),
   challengeCompleted: 0,
@@ -283,11 +295,12 @@ function savePlaySession() {
   localStorage.setItem("jacksPlayBalanceHistory", JSON.stringify(state.playBalanceHistory));
   localStorage.setItem("jacksPlayOptimalBalance", state.playOptimalBalance);
   localStorage.setItem("jacksPlayOptimalBalanceHistory", JSON.stringify(state.playOptimalBalanceHistory));
+  localStorage.setItem("jacksPlayMisses", JSON.stringify(state.playMisses));
 }
 
 function status(message, type = "") {
   el.status.textContent = message;
-  el.status.className = "status" + (type ? " " + type : "");
+  el.status.className = "status" + (type ? " " + type : "") + (message ? "" : " hidden");
 }
 
 function feedback(message, type) {
@@ -417,7 +430,6 @@ function setMode(mode) {
   el.challengePanel.classList.toggle("hidden", !inChallenge);
   el.modeTabs.classList.toggle("hidden", inChallenge);
   el.challengeLaunchWrap.classList.toggle("hidden", inChallenge);
-  el.helpPanel.classList.toggle("hidden", inChallenge);
 
   if (mode === "lookup") renderLookup();
   if (mode === "play") renderPlay();
@@ -513,9 +525,31 @@ function renderChallengeCertificate() {
   el.challengeSummary.replaceChildren();
 
   if (passed) {
+    const perfect = score === CHALLENGE_HANDS;
     const certificate = document.createElement("div");
-    certificate.className = "certificate";
-    certificate.innerHTML = `
+    certificate.className = "certificate" + (perfect ? " grand-master" : "");
+    certificate.innerHTML = perfect ? `
+      <div class="grand-master-rays" aria-hidden="true"></div>
+      <div class="certificate-corner top-left">♠</div>
+      <div class="certificate-corner top-right red">♥</div>
+      <div class="certificate-corner bottom-left red">♦</div>
+      <div class="certificate-corner bottom-right">♣</div>
+      <div class="grand-master-stars">✦ &nbsp; 100% PERFECT &nbsp; ✦</div>
+      <div class="grand-master-crest" aria-hidden="true">♛</div>
+      <div class="certificate-small">THE HIGHEST EL JEFE DISTINCTION</div>
+      <div class="certificate-title">GRAND MASTER</div>
+      <div class="grand-master-subtitle">Certified by El Jefe!</div>
+      <div class="certificate-rule"></div>
+      <p>This certifies flawless completion of the<br>
+      <strong>200-Hand El Jefe Challenge</strong></p>
+      <div class="certificate-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
+      <p class="certificate-declaration"><strong>You are a certified Grand Master by El Jefe!</strong><br>
+      Your Jacks or Better strategy was perfect.</p>
+      <div class="certificate-date">Issued ${date}</div>
+      <div class="certificate-signature">El Jefe</div>
+      <div class="certificate-signature-label">Supreme Video Poker Authority</div>
+      <div class="certificate-share">Take a screenshot. This one belongs in the group text hall of fame.</div>
+    ` : `
       <div class="certificate-corner top-left">♠</div>
       <div class="certificate-corner top-right red">♥</div>
       <div class="certificate-corner bottom-left red">♦</div>
@@ -902,13 +936,15 @@ async function drawPlayHand() {
   if (state.playPhase !== "holding") return;
 
   const initialHand = [...state.playHand];
+  const playerHold = [...state.playHeld].sort((a, b) => a - b);
   const orderedDrawPile = [...state.playDeck];
   let decisionWasCorrect = null;
   let optimalHold = null;
+  let optimalHolds = [];
 
   if (state.strategy) {
     try {
-      const optimalHolds = optimal(initialHand);
+      optimalHolds = optimal(initialHand);
       decisionWasCorrect = optimalHolds.some(hold => equal(hold, state.playHeld));
 
       // If the player's hold is optimal, use that same hold so both paths match exactly.
@@ -965,8 +1001,18 @@ async function drawPlayHand() {
   if (optimalResult) state.playOptimalBalance += optimalResult.payout;
 
   if (decisionWasCorrect !== null) {
+    const handNumber = state.playAttempts + 1;
     state.playAttempts += 1;
-    if (decisionWasCorrect) state.playCorrect += 1;
+    if (decisionWasCorrect) {
+      state.playCorrect += 1;
+    } else {
+      state.playMisses.push({
+        handNumber,
+        hand: [...initialHand],
+        userHold: playerHold,
+        optimalHolds: optimalHolds.map(hold => [...hold].sort((a, b) => a - b))
+      });
+    }
   }
 
   state.playBalanceHistory.push(state.playBalance);
@@ -988,20 +1034,21 @@ async function drawPlayHand() {
 }
 
 function resetPlayBalance() {
-  if (!window.confirm("Reset the balance, accuracy, and bankroll history?")) return;
+  if (!window.confirm("Reset the balance, accuracy, bankroll history, and incorrect-hand review?")) return;
   state.playBalance = 0;
   state.playOptimalBalance = 0;
   state.playAttempts = 0;
   state.playCorrect = 0;
   state.playBalanceHistory = [0];
   state.playOptimalBalanceHistory = [0];
+  state.playMisses = [];
   state.playPhase = "idle";
   state.playHand = [];
   state.playDeck = [];
   state.playHeld.clear();
   state.playHiddenPositions.clear();
   savePlaySession();
-  playFeedback("Balance and history reset to zero.", "");
+  playFeedback("Play session reset to zero.", "");
   clearPlayDecisionIndicator();
   renderPlay();
   renderLookup();
@@ -1196,6 +1243,55 @@ function drawBalanceChart() {
   );
 }
 
+function renderPlayMissedHands() {
+  el.playMissedCount.textContent = String(state.playMisses.length);
+  el.playMissedList.replaceChildren();
+
+  if (!state.playMisses.length) {
+    const empty = document.createElement("p");
+    empty.className = "play-missed-empty";
+    empty.textContent = "No incorrect hands yet this session.";
+    el.playMissedList.append(empty);
+    return;
+  }
+
+  state.playMisses.forEach(miss => {
+    const item = document.createElement("article");
+    item.className = "missed-hand-card play-missed-card";
+
+    const number = document.createElement("div");
+    number.className = "missed-hand-number";
+    number.textContent = `Hand ${miss.handNumber}`;
+
+    const hand = document.createElement("div");
+    hand.className = "mini-hand challenge-review-hand";
+    miss.hand.forEach(card => hand.append(miniCard(card)));
+
+    const decisions = document.createElement("div");
+    decisions.className = "missed-hold-grid";
+
+    const yourDecision = document.createElement("div");
+    yourDecision.className = "missed-hold-row";
+    yourDecision.innerHTML = "<span>Your hold</span>";
+    const yourValue = document.createElement("strong");
+    yourValue.className = "incorrect-decision";
+    yourValue.textContent = describeStoredHold(miss.userHold);
+    yourDecision.append(yourValue);
+
+    const correctDecision = document.createElement("div");
+    correctDecision.className = "missed-hold-row";
+    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
+    const correctValue = document.createElement("strong");
+    correctValue.className = "correct-decision";
+    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
+    correctDecision.append(correctValue);
+
+    decisions.append(yourDecision, correctDecision);
+    item.append(number, hand, decisions);
+    el.playMissedList.append(item);
+  });
+}
+
 function renderPlay() {
   el.playBalance.textContent = formatUnits(state.playBalance);
   el.playBalance.classList.toggle("negative", state.playBalance < 0);
@@ -1203,6 +1299,7 @@ function renderPlay() {
 
   const playAccuracy = state.playAttempts ? 100 * state.playCorrect / state.playAttempts : 0;
   el.playAccuracy.textContent = playAccuracy.toFixed(1) + "%";
+  renderPlayMissedHands();
   el.playChartSummary.textContent = `${state.playAttempts} completed ${state.playAttempts === 1 ? "hand" : "hands"}`;
   const delta = Math.round((state.playOptimalBalance - state.playBalance) * 10) / 10;
   el.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
@@ -1263,21 +1360,10 @@ function renderPlay() {
 }
 
 async function loadURL() {
-  status("Loading strategy...");
   const response = await fetch("./JacksOrBetterStrategy.json");
   if (!response.ok) throw new Error(response.status);
   state.strategy = await response.json();
-  status(`Ready - ${Object.keys(state.strategy).length.toLocaleString()} hands loaded`);
-  el.challengeLaunch.disabled = false;
-  renderTraining();
-  renderLookup();
-  renderChallenge();
-}
-
-async function loadFile(file) {
-  status("Reading selected strategy file...");
-  state.strategy = JSON.parse(await file.text());
-  status(`Ready - ${Object.keys(state.strategy).length.toLocaleString()} hands loaded`);
+  status("");
   el.challengeLaunch.disabled = false;
   renderTraining();
   renderLookup();
@@ -1303,15 +1389,9 @@ el.clearLookup.onclick = clearLookup;
 el.importFromPlay.onclick = importPlayHand;
 el.playAction.onclick = playAction;
 el.resetBalance.onclick = resetPlayBalance;
-el.file.onchange = async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    await loadFile(file);
-  } catch (error) {
-    console.error(error);
-    status("That file could not be read as strategy JSON.", "error");
-  }
+el.footerPaytableLink.onclick = () => {
+  el.paytableDetails.open = true;
+  el.paytableDetails.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
 deal();
@@ -1331,7 +1411,7 @@ if ("ResizeObserver" in window && el.playBalanceChart) {
 
 loadURL().catch(error => {
   console.error(error);
-  status("Strategy file not found. Put JacksOrBetterStrategy.json beside index.html, or load it below.", "error");
+  status("Strategy data could not be loaded. Reload the app or verify that JacksOrBetterStrategy.json is installed.", "error");
 });
 
 if ("serviceWorker" in navigator) {
