@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 16
+# El Jefe's Jacks or Better Trainer — Version 17
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -9,16 +9,13 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
 
-## Version 16 changes
+## Version 17 changes
 
-- Removed the normal strategy-file loading message and the manual file chooser/help panel. Only strategy-loading errors are shown.
-- Reordered tabs to **Play, Train, Look Up**, with Play opening first.
-- Moved the 5-unit paytable into a dropdown beneath the title and added a footer shortcut to it.
-- Added the full verified decision ladder to Look Up.
-- Added an **Incorrect hands this session** dropdown to Play, labeled by hand number with the dealt hand, submitted hold, and all accepted optimal holds.
-- Resetting the Play session now also clears its incorrect-hand review.
-- Added a separate extravagant 100% Grand Master certificate.
-- Service-worker cache: `el-jefe-jacks-trainer-v16`.
+- Removed the “Video Poker Practice” eyebrow above the title.
+- Clarified that the two made-hand groups are handled before the main ladder, using top/bottom wording that matches the stacked layout.
+- Removed the internal coverage note from the bottom of the decision ladder.
+- Removed the footer paytable shortcut and strategy-profile sentence; the full-pay 9/6 max-bet context remains in the header.
+- Service-worker cache: `el-jefe-jacks-trainer-v17`.
 
 ## Run locally
 

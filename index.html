@@ -15,7 +15,6 @@
 <body>
   <main class="app">
     <header>
-      <div class="eyebrow">VIDEO POKER PRACTICE</div>
       <h1>El Jefe's Jacks or Better Trainer</h1>
       <details id="paytableDetails" class="header-paytable">
         <summary>Full-pay 9/6 Jacks or Better · max bet (5 units)</summary>
@@ -153,8 +152,8 @@
 
   <section class="section">
     <div class="section-head">
-      <div><div class="eyebrow" style="color:var(--green2)">Checkpoint 1</div><h2>Made-hand gate</h2></div>
-      <div class="section-sub">These rules are handled before the main ladder. The left group is automatic; the right group can be broken only for the listed premium draw.</div>
+      <div><div class="eyebrow" style="color:var(--green2)">Checkpoint 1</div><h2>Handle made hands first</h2></div>
+      <div class="section-sub">Handle both groups before using the main ladder: automatic hands on top, then breakable made hands below.</div>
     </div>
     <div class="made-grid">
       <div class="made-card">
@@ -238,7 +237,6 @@
       <div class="rung low"><div class="num">26</div><div><div class="hold-title">None of the above</div><div class="hold-sub">Discard all five.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">2</span><span class="s">♣</span></span><span class="card red"><span class="r">5</span><span class="s">♦</span></span><span class="card black"><span class="r">7</span><span class="s">♠</span></span><span class="card red"><span class="r">9</span><span class="s">♥</span></span><span class="card black"><span class="r">10</span><span class="s">♣</span></span></div></div><div class="condition">Draw five new cards.</div></div>
     </div>
 
-    <div class="foot"><strong>Coverage note.</strong> This graphic combines the previously verified made-hand rules with the exact 26-rung no-made-hand ladder. The 3SF system is not a separate decision chart: its five score categories are embedded at priorities 8, 12, 14, 18, and 25. <span class="tiny">Examples show the cards being held, except the exact T-T-J-Q-K rung, which is explicitly labeled.</span></div>
   </section>
           </div>
         </div>
@@ -272,9 +270,7 @@
     <footer>
       <div class="footer-actions">
         <a class="footer-link" href="https://jliese916.github.io/BlackJackTrainer/">Open El Jefe's Blackjack Trainer</a>
-        <button id="footerPaytableLink" class="footer-paytable-link" type="button">View the 5-unit paytable</button>
       </div>
-      <p>Strategy profile: full-pay 9/6 Jacks or Better at the 5-unit maximum wager.</p>
     </footer>
   </main>
   <script src="./app.js" defer></script>

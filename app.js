@@ -21,7 +21,6 @@ const PAYTABLE = {
 const el = {
   status: document.querySelector("#status"),
   paytableDetails: document.querySelector("#paytableDetails"),
-  footerPaytableLink: document.querySelector("#footerPaytableLink"),
   trainTab: document.querySelector("#trainTab"),
   lookupTab: document.querySelector("#lookupTab"),
   playTab: document.querySelector("#playTab"),
@@ -1389,10 +1388,6 @@ el.clearLookup.onclick = clearLookup;
 el.importFromPlay.onclick = importPlayHand;
 el.playAction.onclick = playAction;
 el.resetBalance.onclick = resetPlayBalance;
-el.footerPaytableLink.onclick = () => {
-  el.paytableDetails.open = true;
-  el.paytableDetails.scrollIntoView({ behavior: "smooth", block: "center" });
-};
 
 deal();
 renderLookup();
