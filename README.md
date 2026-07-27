@@ -15,7 +15,7 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - Clarified that the two made-hand groups are handled before the main ladder, using top/bottom wording that matches the stacked layout.
 - Removed the internal coverage note from the bottom of the decision ladder.
 - Removed the footer paytable shortcut and strategy-profile sentence; the full-pay 9/6 max-bet context remains in the header.
-- Service-worker cache: `el-jefe-jacks-trainer-v17`.
+- Service-worker cache: `el-jefe-jacks-trainer-v18`.
 
 ## Run locally
 

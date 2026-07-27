@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#07100d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="El Jefe Jacks">
   <title>El Jefe's Jacks or Better Trainer</title>
@@ -14,23 +14,35 @@
 </head>
 <body>
   <main class="app">
-    <header>
-      <h1>El Jefe's Jacks or Better Trainer</h1>
-      <details id="paytableDetails" class="header-paytable">
-        <summary>Full-pay 9/6 Jacks or Better · max bet (5 units)</summary>
-        <div class="header-paytable-grid" aria-label="5-unit paytable">
-          <span>Royal Flush</span><strong>4000</strong>
-          <span>Straight Flush</span><strong>250</strong>
-          <span>Four of a Kind</span><strong>125</strong>
-          <span>Full House</span><strong>45</strong>
-          <span>Flush</span><strong>30</strong>
-          <span>Straight</span><strong>20</strong>
-          <span>Three of a Kind</span><strong>15</strong>
-          <span>Two Pair</span><strong>10</strong>
-          <span>Jacks or Better</span><strong>5</strong>
-        </div>
-      </details>
-      <div id="status" class="status hidden" role="alert"></div>
+    <header class="castle-masthead">
+      <div class="castle-tower tower-left" aria-hidden="true">
+        <div class="tower-crenels"><i></i><i></i><i></i></div>
+        <span class="tower-suit diamond">♦</span>
+      </div>
+      <div class="castle-hall">
+        <div class="hall-crenels" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="castle-kicker">Casa del Jefe</div>
+        <h1>El Jefe's Jacks or Better Trainer</h1>
+        <details id="paytableDetails" class="header-paytable">
+          <summary>Full-pay 9/6 Jacks or Better · max bet (5 units)</summary>
+          <div class="header-paytable-grid" aria-label="5-unit paytable">
+            <span>Royal Flush</span><strong>4000</strong>
+            <span>Straight Flush</span><strong>250</strong>
+            <span>Four of a Kind</span><strong>125</strong>
+            <span>Full House</span><strong>45</strong>
+            <span>Flush</span><strong>30</strong>
+            <span>Straight</span><strong>20</strong>
+            <span>Three of a Kind</span><strong>15</strong>
+            <span>Two Pair</span><strong>10</strong>
+            <span>Jacks or Better</span><strong>5</strong>
+          </div>
+        </details>
+        <div id="status" class="status hidden" role="alert"></div>
+      </div>
+      <div class="castle-tower tower-right" aria-hidden="true">
+        <div class="tower-crenels"><i></i><i></i><i></i></div>
+        <span class="tower-suit club">♣</span>
+      </div>
     </header>
 
     <div id="challengeLaunchWrap" class="challenge-launch">
@@ -269,7 +281,7 @@
 
     <footer>
       <div class="footer-actions">
-        <a class="footer-link" href="https://jliese916.github.io/BlackJackTrainer/">Open El Jefe's Blackjack Trainer</a>
+        <a class="footer-link" href="https://jliese916.github.io/">Return to Casa del Jefe</a>
       </div>
     </footer>
   </main>
