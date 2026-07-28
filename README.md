@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 23
+# Casa del Jefe — Video Poker Hall — Version 24
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -50,3 +50,10 @@ Replace the existing site files with the contents of this folder and commit them
 - Standardizes the Play-area support widths for a cleaner layout consistent with Blackjack.
 - Retains the Casa del Jefe crest card backs, decision ladder, and all Version 22 features.
 - Service-worker cache: `el-jefe-jacks-trainer-v23`.
+
+
+## Version 24 changes
+
+- Renames the castle room title to **Video Poker Hall**.
+- Retains the unified Session Review layout, Casa del Jefe crest card backs, and complete verified decision ladder.
+- Service-worker cache: `el-jefe-jacks-trainer-v24`.
