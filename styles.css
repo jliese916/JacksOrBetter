@@ -609,3 +609,40 @@ footer{color:var(--casa-muted)}
 .lookup-hand .card.placeholder:hover{
   border-color:rgba(241,217,146,.62)!important;
 }
+
+
+/* Version 26: cohesive dark Lookup controls and clearer action order. */
+#lookupPanel .picker-button{
+  border-color:rgba(201,162,58,.48)!important;
+  background:linear-gradient(180deg,#173b30,#0c241b)!important;
+  color:var(--casa-cream)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.05),0 4px 10px rgba(0,0,0,.16)!important;
+}
+#lookupPanel .picker-button:hover:not(:disabled){
+  border-color:var(--casa-gold-soft)!important;
+  background:linear-gradient(180deg,#1e4e3b,#113126)!important;
+}
+#lookupPanel .picker-button.active{
+  border-color:var(--casa-gold-soft)!important;
+  background:linear-gradient(145deg,var(--casa-gold-soft),var(--casa-gold))!important;
+  color:#132019!important;
+  box-shadow:0 0 0 2px rgba(231,200,106,.15),0 5px 12px rgba(0,0,0,.22)!important;
+}
+#lookupPanel .picker-button.suit-button.suit-hearts{color:var(--suit-heart)!important}
+#lookupPanel .picker-button.suit-button.suit-diamonds{color:var(--suit-diamond)!important}
+#lookupPanel .picker-button.suit-button.suit-clubs{color:var(--suit-club)!important}
+#lookupPanel .picker-button.suit-button.suit-spades{color:#e8e4d8!important}
+#lookupPanel .picker-button.suit-button.active{background:linear-gradient(145deg,#f4df9c,#c9a23a)!important}
+.lookup-actions{margin-top:18px!important}
+.lookup-actions .import-play-button{
+  min-width:125px!important;
+  min-height:47px!important;
+  margin:0!important;
+  padding:0 14px!important;
+  border-color:rgba(216,181,100,.6)!important;
+  background:linear-gradient(180deg,#173b30,#0d281f)!important;
+  color:var(--casa-cream)!important;
+}
+.lookup-actions .import-play-button:disabled{opacity:.38!important}
+.lookup-find-actions{margin-top:12px!important}
+.lookup-find-actions .primary{min-width:170px!important}

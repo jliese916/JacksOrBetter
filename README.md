@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 23
+# Casa del Jefe — Video Poker Hall
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -56,3 +56,12 @@ Replace the existing site files with the contents of this folder and commit them
 - Shows the Casa del Jefe crest card backs before the first Play deal instead of gray placeholders.
 - Uses dark emerald empty-card slots in Look Up, matching the visual treatment used by Blackjack.
 - Service-worker cache: `el-jefe-jacks-trainer-v25`.
+
+
+## Version 26 changes
+
+- Changes the castle masthead title to **Video Poker Hall**.
+- Restyles Lookup rank and suit entry buttons in the dark emerald-and-gold Casa palette.
+- Places **Import from Play** before the manual result action, then keeps **Find Best Hold** as the final step below.
+- Retains the darker empty Lookup card slots and branded initial Play card backs.
+- Service-worker cache: `el-jefe-jacks-trainer-v26`.
