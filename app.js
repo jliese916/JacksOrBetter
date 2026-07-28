@@ -1104,7 +1104,7 @@ function drawBalanceChart() {
   const zeroY = yFor(0);
 
   context.save();
-  context.strokeStyle = "rgba(71, 85, 105, .58)";
+  context.strokeStyle = "rgba(203, 191, 159, .45)";
   context.lineWidth = 1;
   context.setLineDash([5, 5]);
   context.beginPath();
@@ -1132,7 +1132,7 @@ function drawBalanceChart() {
     context.lineTo(xFor(actualValues.length - 1), zeroY);
     context.lineTo(xFor(0), zeroY);
     context.closePath();
-    context.fillStyle = "rgba(22, 163, 74, .11)";
+    context.fillStyle = "rgba(76, 207, 121, .13)";
     context.fill();
     context.restore();
 
@@ -1144,7 +1144,7 @@ function drawBalanceChart() {
     context.lineTo(xFor(actualValues.length - 1), zeroY);
     context.lineTo(xFor(0), zeroY);
     context.closePath();
-    context.fillStyle = "rgba(220, 38, 38, .10)";
+    context.fillStyle = "rgba(255, 107, 107, .11)";
     context.fill();
     context.restore();
 
@@ -1162,10 +1162,10 @@ function drawBalanceChart() {
       context.restore();
     };
 
-    drawClippedLine(0, zeroY, "#15803d");
-    drawClippedLine(zeroY, rect.height, "#dc2626");
+    drawClippedLine(0, zeroY, "#4ccf79");
+    drawClippedLine(zeroY, rect.height, "#ff6b6b");
   } else {
-    context.fillStyle = "#64748b";
+    context.fillStyle = "#e7c86a";
     context.beginPath();
     context.arc(xFor(0), yFor(actualValues[0]), 3, 0, Math.PI * 2);
     context.fill();
@@ -1174,7 +1174,7 @@ function drawBalanceChart() {
   if (optimalValues.length > 1) {
     context.save();
     buildPath(optimalValues);
-    context.strokeStyle = "#64748b";
+    context.strokeStyle = "#e7c86a";
     context.lineWidth = 2;
     context.lineJoin = "round";
     context.lineCap = "round";
@@ -1183,13 +1183,13 @@ function drawBalanceChart() {
   }
 
   const actualLast = actualValues[actualValues.length - 1];
-  context.fillStyle = actualLast >= 0 ? "#15803d" : "#dc2626";
+  context.fillStyle = actualLast >= 0 ? "#4ccf79" : "#ff6b6b";
   context.beginPath();
   context.arc(xFor(actualValues.length - 1), yFor(actualLast), 3.5, 0, Math.PI * 2);
   context.fill();
 
   const optimalLast = optimalValues[optimalValues.length - 1];
-  context.fillStyle = "#64748b";
+  context.fillStyle = "#e7c86a";
   context.beginPath();
   context.arc(xFor(optimalValues.length - 1), yFor(optimalLast), 3, 0, Math.PI * 2);
   context.fill();
@@ -1209,8 +1209,8 @@ function drawBalanceChart() {
     : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} ${Math.abs(delta) === 1 ? "unit" : "units"}`;
 
   context.save();
-  context.strokeStyle = "rgba(71, 85, 105, .88)";
-  context.fillStyle = "#334155";
+  context.strokeStyle = "rgba(231, 200, 106, .78)";
+  context.fillStyle = "#f8f1df";
   context.lineWidth = 1.4;
   context.lineCap = "round";
 

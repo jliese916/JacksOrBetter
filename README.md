@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 20
+# El Jefe's Jacks or Better Trainer — Version 21
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -9,20 +9,27 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
 
-## Version 20 changes
+## Version 21 changes
+
+- Removed the crest watermark from the El Jefe Challenge button and mounted the crest at the center of the castle masthead.
+- Restyled bankroll history and incorrect-hand review in the dark Casa del Jefe palette.
+- Rebuilt ladder examples with the same centered rank and corner-suit card design used in Play.
+- Removed the beige example capsules in favor of subtle dark holders.
+- Standardized rung colors by hand family: royal, ordinary draw, 3SF, high-card/Broadway, special case, and none.
+- Added the crest to the Return to Casa del Jefe link.
 
 - Removed the “Video Poker Practice” eyebrow above the title.
 - Clarified that the two made-hand groups are handled before the main ladder, using top/bottom wording that matches the stacked layout.
 - Removed the internal coverage note from the bottom of the decision ladder.
 - Removed the footer paytable shortcut and strategy-profile sentence; the full-pay 9/6 max-bet context remains in the header.
-- - Refined and recentered the Casa del Jefe crest.
+- Refined and recentered the Casa del Jefe crest.
 - Added iPhone icon and rich sharing previews with the crest.
 - Preserved simple rank-and-suit card faces.
 - Renamed the never-break made-hand group “UNBREAKABLE”; high pairs remain in the separate breakable group.
 - Kept the colored numbered ladder exclusively for non-made hands.
 - Defined non-royal three-card straight-flush draws as “3SF” at first mention.
 - Matched all example suit colors and switch badges to their actual ladder rungs.
-- Service-worker cache: `el-jefe-jacks-trainer-v20`.
+- Service-worker cache: `el-jefe-jacks-trainer-v21`.
 
 ## Run locally
 
