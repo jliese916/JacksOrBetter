@@ -294,3 +294,78 @@ footer{color:var(--casa-muted)}
 .actions button{border-color:var(--casa-line)}
 .strategy-ladder-details{box-shadow:none}
 .decision-ladder{border-radius:16px;background:#f8f1df;padding:4px;color:var(--dl-ink)}
+
+
+/* Casa del Jefe brand system v2 */
+:root{
+  --casa-night:#07100d;
+  --casa-black:#080f0b;
+  --casa-deep:#0f2b1f;
+  --casa-emerald:#174a35;
+  --casa-gold:#c9a23a;
+  --casa-gold-soft:#e7c86a;
+  --casa-cream:#f8f1df;
+  --casa-muted:#cbbf9f;
+  --suit-heart:#d83a3a;
+  --suit-diamond:#1e6df2;
+  --suit-club:#2ba84a;
+  --suit-spade:#111111;
+}
+.challenge-heading-row h2,#challengeProgress{
+  color:var(--casa-gold-soft)!important;
+  text-shadow:0 2px 10px rgba(0,0,0,.45);
+}
+.castle-hall{overflow:visible}
+.castle-hall::after{
+  content:"";position:absolute;inset:7px 18px 4px;pointer-events:none;
+  background:url("./jefe-crest.svg") center/118px no-repeat;opacity:.055;
+}
+.masthead-crest{
+  position:absolute;left:50%;top:-54px;z-index:4;width:70px;height:70px;
+  transform:translateX(-50%);filter:drop-shadow(0 8px 13px rgba(0,0,0,.46));
+}
+.castle-kicker,.castle-masthead h1,.castle-masthead .rule-summary{position:relative;z-index:2}
+.challenge-button{position:relative;overflow:hidden}
+.challenge-button::after{
+  content:"";position:absolute;right:8px;top:50%;width:34px;height:34px;transform:translateY(-50%);
+  background:url("./jefe-crest.svg") center/contain no-repeat;opacity:.22;
+}
+.footer-link img{width:22px;height:22px;display:block}
+.footer-link::before{content:none!important}
+.suit-hearts{color:var(--suit-heart)!important}.suit-diamonds{color:var(--suit-diamond)!important}.suit-clubs{color:var(--suit-club)!important}.suit-spades{color:var(--suit-spade)!important}
+@media(max-width:520px){.masthead-crest{top:-43px;width:56px;height:56px}.challenge-button::after{width:29px;height:29px}}
+
+
+/* Decision ladder — Casa del Jefe dark academy palette */
+.decision-ladder{
+  --green2:#3e9b6a;--purple:#9f84df;--dl-ink:#f8f1df;--dl-muted:#cbbf9f;
+  --dl-line:rgba(201,162,58,.32);--dl-green:#2ba84a;--dl-green2:#3e9b6a;--dl-green3:rgba(43,168,74,.14);
+  --dl-gold:#c9a23a;--dl-goldbg:rgba(201,162,58,.13);--dl-purple:#9f84df;--dl-purplebg:rgba(112,71,185,.14);
+  --dl-blue:#4f96e6;--dl-bluebg:rgba(30,109,242,.12);--dl-red:#e26161;--dl-redbg:rgba(216,58,58,.14);
+  --dl-graybg:rgba(255,255,255,.05);background:#07100d!important;color:var(--dl-ink)!important;padding:8px!important;
+}
+.decision-ladder .hero{border:1px solid rgba(201,162,58,.48);background:radial-gradient(circle at 75% 10%,rgba(201,162,58,.13),transparent 34%),linear-gradient(135deg,#174a35,#0b2118 72%)}
+.decision-ladder .hero:after{content:"";right:14px;top:8px;width:90px;height:90px;background:url("./jefe-crest.svg") center/contain no-repeat;opacity:.075}
+.decision-ladder .hero p{color:#ddd1b4}.decision-ladder .eyebrow{color:#e7c86a}.decision-ladder .instruction{border-color:rgba(231,200,106,.34);background:rgba(0,0,0,.22);color:#f8f1df}
+.decision-ladder .section h2{color:#f8f1df}.decision-ladder .section-sub{color:#cbbf9f}
+.decision-ladder .made-card,.decision-ladder .key-box{border-color:rgba(201,162,58,.34);background:linear-gradient(160deg,rgba(255,255,255,.035),transparent 38%),#0f2b1f;color:#f8f1df}
+.decision-ladder .made-row{border-color:rgba(201,162,58,.16)}.decision-ladder .made-rule,.decision-ladder .key-text{color:#cbbf9f}
+.decision-ladder .badge.auto{background:rgba(43,168,74,.18);color:#8ee1aa;border:1px solid rgba(43,168,74,.38)}
+.decision-ladder .badge.break{background:rgba(201,162,58,.17);color:#e7c86a;border:1px solid rgba(201,162,58,.38)}
+.decision-ladder .ladder:before{background:linear-gradient(#c9a23a,#3e9b6a 22%,#9f84df 48%,#4f96e6 78%,#6f7e75)}
+.decision-ladder .rung{border-color:rgba(201,162,58,.28);background:#0f2b1f;color:#f8f1df;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+.decision-ladder .rung:after{box-shadow:0 0 0 3px #07100d,0 0 0 4px var(--accent)}
+.decision-ladder .royal{background:linear-gradient(90deg,rgba(201,162,58,.18),#0f2b1f 38%)}
+.decision-ladder .draw{background:linear-gradient(90deg,rgba(62,155,106,.13),#0f2b1f 38%)}
+.decision-ladder .sf{background:linear-gradient(90deg,rgba(159,132,223,.16),#0f2b1f 38%)}
+.decision-ladder .high{background:linear-gradient(90deg,rgba(79,150,230,.15),#0f2b1f 38%)}
+.decision-ladder .special{background:linear-gradient(90deg,rgba(201,162,58,.12),#0f2b1f 38%)}
+.decision-ladder .low{background:linear-gradient(90deg,rgba(255,255,255,.06),#0f2b1f 38%)}
+.decision-ladder .hold-sub,.decision-ladder .condition{color:#cbbf9f}.decision-ladder .condition strong{color:#f8f1df}
+.decision-ladder .example-group{border-color:#cdbf96;background:#f8f1df}.decision-ladder .card{border-color:#d7caa6;background:#fffdf7}
+.decision-ladder .card.suit-heart{color:#d83a3a}.decision-ladder .card.suit-diamond{color:#1e6df2}.decision-ladder .card.suit-club{color:#2ba84a}.decision-ladder .card.suit-spade{color:#111111}
+.decision-ladder .score{background:rgba(159,132,223,.16);color:#d8c9ff}
+.decision-ladder .switch{gap:5px;color:#f8f1df}.decision-ladder .switch-num{min-width:25px;height:25px;border:0;border-radius:8px;color:#fff;box-shadow:inset 0 1px rgba(255,255,255,.22),0 2px 5px rgba(0,0,0,.22)}
+.decision-ladder .switch.to-1 .switch-num{background:#c9a23a}.decision-ladder .switch.to-2 .switch-num,.decision-ladder .switch.to-4 .switch-num,.decision-ladder .switch.to-10 .switch-num{background:#3e9b6a}
+.decision-ladder .switch.to-20 .switch-num,.decision-ladder .switch.to-22 .switch-num,.decision-ladder .switch.to-24 .switch-num{background:#4f96e6}
+.decision-ladder .switch-arrow{color:#e7c86a}

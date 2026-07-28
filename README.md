@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 17
+# El Jefe's Jacks or Better Trainer — Version 20
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -9,13 +9,20 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
 
-## Version 17 changes
+## Version 20 changes
 
 - Removed the “Video Poker Practice” eyebrow above the title.
 - Clarified that the two made-hand groups are handled before the main ladder, using top/bottom wording that matches the stacked layout.
 - Removed the internal coverage note from the bottom of the decision ladder.
 - Removed the footer paytable shortcut and strategy-profile sentence; the full-pay 9/6 max-bet context remains in the header.
-- Service-worker cache: `el-jefe-jacks-trainer-v18`.
+- - Refined and recentered the Casa del Jefe crest.
+- Added iPhone icon and rich sharing previews with the crest.
+- Preserved simple rank-and-suit card faces.
+- Renamed the never-break made-hand group “UNBREAKABLE”; high pairs remain in the separate breakable group.
+- Kept the colored numbered ladder exclusively for non-made hands.
+- Defined non-royal three-card straight-flush draws as “3SF” at first mention.
+- Matched all example suit colors and switch badges to their actual ladder rungs.
+- Service-worker cache: `el-jefe-jacks-trainer-v20`.
 
 ## Run locally
 

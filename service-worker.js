@@ -1,4 +1,4 @@
-const CACHE_NAME = "el-jefe-jacks-trainer-v18";
+const CACHE_NAME = "el-jefe-jacks-trainer-v20";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,9 @@ const APP_SHELL = [
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",
+  "./og-jacks-or-better.png",
+  "./favicon-64.png",
+  "./jefe-crest.svg",
   "./JacksOrBetterStrategy.json"
 ];
 

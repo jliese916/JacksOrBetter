@@ -1,290 +1,251 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07100d">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="El Jefe Jacks">
-  <title>El Jefe's Jacks or Better Trainer</title>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#07100d" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="El Jefe Jacks" name="apple-mobile-web-app-title"/>
+<title>El Jefe's Jacks or Better Trainer</title>
+<meta content="Full-pay 9/6 Jacks or Better training, complete decision ladder, session review, and the El Jefe Challenge." name="description"/>
+<meta content="website" property="og:type"/>
+<meta content="El Jefe's Jacks or Better Trainer" property="og:title"/>
+<meta content="Full-pay 9/6 Jacks or Better training, complete decision ladder, session review, and the El Jefe Challenge." property="og:description"/>
+<meta content="https://jliese916.github.io/JacksOrBetter/" property="og:url"/>
+<meta content="https://jliese916.github.io/JacksOrBetter/og-jacks-or-better.png" property="og:image"/>
+<meta content="1200" property="og:image:width"/>
+<meta content="630" property="og:image:height"/>
+<meta content="El Jefe's Jacks or Better Trainer — Casa del Jefe crest" property="og:image:alt"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="El Jefe's Jacks or Better Trainer" name="twitter:title"/>
+<meta content="Full-pay 9/6 Jacks or Better training, complete decision ladder, session review, and the El Jefe Challenge." name="twitter:description"/>
+<meta content="https://jliese916.github.io/JacksOrBetter/og-jacks-or-better.png" name="twitter:image"/>
+<link href="./manifest.webmanifest" rel="manifest"/>
+<link href="./favicon-64.png" rel="icon" type="image/png"/>
+<link href="./apple-touch-icon.png" rel="apple-touch-icon"/>
+<link href="./styles.css" rel="stylesheet"/>
 </head>
 <body>
-  <main class="app">
-    <header class="castle-masthead">
-      <div class="castle-tower tower-left" aria-hidden="true">
-        <div class="tower-crenels"><i></i><i></i><i></i></div>
-        <span class="tower-suit diamond">♦</span>
-      </div>
-      <div class="castle-hall">
-        <div class="hall-crenels" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="castle-kicker">Casa del Jefe</div>
-        <h1>El Jefe's Jacks or Better Trainer</h1>
-        <details id="paytableDetails" class="header-paytable">
-          <summary>Full-pay 9/6 Jacks or Better · max bet (5 units)</summary>
-          <div class="header-paytable-grid" aria-label="5-unit paytable">
-            <span>Royal Flush</span><strong>4000</strong>
-            <span>Straight Flush</span><strong>250</strong>
-            <span>Four of a Kind</span><strong>125</strong>
-            <span>Full House</span><strong>45</strong>
-            <span>Flush</span><strong>30</strong>
-            <span>Straight</span><strong>20</strong>
-            <span>Three of a Kind</span><strong>15</strong>
-            <span>Two Pair</span><strong>10</strong>
-            <span>Jacks or Better</span><strong>5</strong>
-          </div>
-        </details>
-        <div id="status" class="status hidden" role="alert"></div>
-      </div>
-      <div class="castle-tower tower-right" aria-hidden="true">
-        <div class="tower-crenels"><i></i><i></i><i></i></div>
-        <span class="tower-suit club">♣</span>
-      </div>
-    </header>
-
-    <div id="challengeLaunchWrap" class="challenge-launch">
-      <button id="challengeLaunch" class="challenge-button" type="button" disabled>
-        <span>Take the</span>
-        <strong>El Jefe Challenge</strong>
-      </button>
-    </div>
-
-    <nav id="modeTabs" class="mode-tabs" aria-label="App mode">
-      <button id="playTab" class="mode-tab active" type="button" aria-selected="true">Play</button>
-      <button id="trainTab" class="mode-tab" type="button" aria-selected="false">Train</button>
-      <button id="lookupTab" class="mode-tab" type="button" aria-selected="false">Look Up</button>
-    </nav>
-
-    <section id="playPanel" class="panel">
-      <div class="play-stats" aria-label="Play statistics">
-        <div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
-        <div class="play-accuracy-stat">
-          <small>ACCURACY</small>
-          <span class="play-accuracy-line">
-            <strong id="playAccuracy">0.0%</strong>
-            <span id="playDecisionIndicator" class="play-decision-indicator" aria-live="polite"></span>
-          </span>
-        </div>
-        <div><small>BET</small><strong>5 units</strong></div>
-      </div>
-
-      <section class="balance-chart-card" aria-label="Running balance chart">
-        <div class="balance-chart-heading">
-          <span>Bankroll history</span>
-          <small id="playChartSummary">0 completed hands</small>
-        </div>
-        <div class="balance-chart-legend" aria-hidden="true">
-          <span><i class="legend-line legend-actual"></i>Your play</span>
-          <span><i class="legend-line legend-optimal"></i>Optimal play</span>
-        </div>
-        <div id="playDeltaSummary" class="chart-delta-pill">Optimal − you: 0 units</div>
-        <canvas id="playBalanceChart" class="balance-chart" role="img" aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards"></canvas>
-      </section>
-
-      <p>Deal, tap the cards you want to hold, then draw.</p>
-      <div id="playMadeHand" class="made-hand" aria-live="polite"></div>
-      <div id="playHand" class="hand" aria-label="Current play hand"></div>
-      <div id="playSelection" class="selection">Press Deal to begin.</div>
-
-      <div class="actions">
-        <button id="playAction" class="primary">Deal (-5)</button>
-      </div>
-
-      <div id="playFeedback" class="feedback" aria-live="polite"></div>
-
-      <details id="playMissedDetails" class="play-settings review-details">
-        <summary>Incorrect hands this session (<span id="playMissedCount">0</span>)</summary>
-        <div id="playMissedList" class="play-missed-list"></div>
-      </details>
-
-      <details class="play-settings">
-        <summary>Session controls</summary>
-        <button id="resetBalance" class="danger-link" type="button">Reset balance and history</button>
-      </details>
-    </section>
-
-    <section id="trainPanel" class="panel hidden">
-      <p>Tap the cards you would keep, then check your answer.</p>
-      <div id="trainMadeHand" class="made-hand" aria-live="polite"></div>
-      <div id="hand" class="hand"></div>
-      <div id="selection" class="selection">Discard all five cards</div>
-      <div class="actions">
-        <button id="check" class="primary" disabled>Check</button>
-        <button id="newHand">New Hand</button>
-      </div>
-      <div id="feedback" class="feedback" aria-live="polite"></div>
-
-      <section id="scorePanel" class="score">
-        <div><small>SCORE</small><strong id="score">0 / 0</strong></div>
-        <div><small>PERCENTAGE</small><strong id="percentage">0.0%</strong></div>
-        <button id="reset" class="link">Reset score</button>
-      </section>
-    </section>
-
-    <section id="lookupPanel" class="panel hidden">
-      <p>Enter five cards by choosing a rank and then a suit.</p>
-
-      <div id="lookupHand" class="hand lookup-hand" aria-label="Entered hand"></div>
-      <div id="lookupPrompt" class="selection">Choose a rank</div>
-
-      <div class="picker-section">
-        <div class="picker-label">Rank</div>
-        <div id="rankPicker" class="rank-picker"></div>
-      </div>
-
-      <div class="picker-section">
-        <div class="picker-label">Suit</div>
-        <div id="suitPicker" class="suit-picker"></div>
-      </div>
-
-      <div class="actions lookup-actions">
-        <button id="findHold" class="primary" disabled>Find Best Hold</button>
-        <button id="clearLookup">Clear</button>
-      </div>
-
-      <button id="importFromPlay" class="import-play-button" type="button" disabled>
+<main class="app">
+<header class="castle-masthead">
+<div aria-hidden="true" class="castle-tower tower-left">
+<div class="tower-crenels"><i></i><i></i><i></i></div>
+<span class="tower-suit diamond">♦</span>
+</div>
+<div class="castle-hall">
+<div aria-hidden="true" class="hall-crenels"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="castle-kicker">Casa del Jefe</div>
+<h1>El Jefe's Jacks or Better Trainer</h1>
+<details class="header-paytable" id="paytableDetails">
+<summary>Full-pay 9/6 Jacks or Better · max bet (5 units)</summary>
+<div aria-label="5-unit paytable" class="header-paytable-grid">
+<span>Royal Flush</span><strong>4000</strong>
+<span>Straight Flush</span><strong>250</strong>
+<span>Four of a Kind</span><strong>125</strong>
+<span>Full House</span><strong>45</strong>
+<span>Flush</span><strong>30</strong>
+<span>Straight</span><strong>20</strong>
+<span>Three of a Kind</span><strong>15</strong>
+<span>Two Pair</span><strong>10</strong>
+<span>Jacks or Better</span><strong>5</strong>
+</div>
+</details>
+<div class="status hidden" id="status" role="alert"></div>
+</div>
+<div aria-hidden="true" class="castle-tower tower-right">
+<div class="tower-crenels"><i></i><i></i><i></i></div>
+<span class="tower-suit club">♣</span>
+</div>
+</header>
+<div class="challenge-launch" id="challengeLaunchWrap">
+<button class="challenge-button" disabled="" id="challengeLaunch" type="button">
+<span>Take the</span>
+<strong>El Jefe Challenge</strong>
+</button>
+</div>
+<nav aria-label="App mode" class="mode-tabs" id="modeTabs">
+<button aria-selected="true" class="mode-tab active" id="playTab" type="button">Play</button>
+<button aria-selected="false" class="mode-tab" id="trainTab" type="button">Train</button>
+<button aria-selected="false" class="mode-tab" id="lookupTab" type="button">Look Up</button>
+</nav>
+<section class="panel" id="playPanel">
+<div aria-label="Play statistics" class="play-stats">
+<div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
+<div class="play-accuracy-stat">
+<small>ACCURACY</small>
+<span class="play-accuracy-line">
+<strong id="playAccuracy">0.0%</strong>
+<span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span>
+</span>
+</div>
+<div><small>BET</small><strong>5 units</strong></div>
+</div>
+<section aria-label="Running balance chart" class="balance-chart-card">
+<div class="balance-chart-heading">
+<span>Bankroll history</span>
+<small id="playChartSummary">0 completed hands</small>
+</div>
+<div aria-hidden="true" class="balance-chart-legend">
+<span><i class="legend-line legend-actual"></i>Your play</span>
+<span><i class="legend-line legend-optimal"></i>Optimal play</span>
+</div>
+<div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0 units</div>
+<canvas aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards" class="balance-chart" id="playBalanceChart" role="img"></canvas>
+</section>
+<p>Deal, tap the cards you want to hold, then draw.</p>
+<div aria-live="polite" class="made-hand" id="playMadeHand"></div>
+<div aria-label="Current play hand" class="hand" id="playHand"></div>
+<div class="selection" id="playSelection">Press Deal to begin.</div>
+<div class="actions">
+<button class="primary" id="playAction">Deal (-5)</button>
+</div>
+<div aria-live="polite" class="feedback" id="playFeedback"></div>
+<details class="play-settings review-details" id="playMissedDetails">
+<summary>Incorrect hands this session (<span id="playMissedCount">0</span>)</summary>
+<div class="play-missed-list" id="playMissedList"></div>
+</details>
+<details class="play-settings">
+<summary>Session controls</summary>
+<button class="danger-link" id="resetBalance" type="button">Reset balance and history</button>
+</details>
+</section>
+<section class="panel hidden" id="trainPanel">
+<p>Tap the cards you would keep, then check your answer.</p>
+<div aria-live="polite" class="made-hand" id="trainMadeHand"></div>
+<div class="hand" id="hand"></div>
+<div class="selection" id="selection">Discard all five cards</div>
+<div class="actions">
+<button class="primary" disabled="" id="check">Check</button>
+<button id="newHand">New Hand</button>
+</div>
+<div aria-live="polite" class="feedback" id="feedback"></div>
+<section class="score" id="scorePanel">
+<div><small>SCORE</small><strong id="score">0 / 0</strong></div>
+<div><small>PERCENTAGE</small><strong id="percentage">0.0%</strong></div>
+<button class="link" id="reset">Reset score</button>
+</section>
+</section>
+<section class="panel hidden" id="lookupPanel">
+<p>Enter five cards by choosing a rank and then a suit.</p>
+<div aria-label="Entered hand" class="hand lookup-hand" id="lookupHand"></div>
+<div class="selection" id="lookupPrompt">Choose a rank</div>
+<div class="picker-section">
+<div class="picker-label">Rank</div>
+<div class="rank-picker" id="rankPicker"></div>
+</div>
+<div class="picker-section">
+<div class="picker-label">Suit</div>
+<div class="suit-picker" id="suitPicker"></div>
+</div>
+<div class="actions lookup-actions">
+<button class="primary" disabled="" id="findHold">Find Best Hold</button>
+<button id="clearLookup">Clear</button>
+</div>
+<button class="import-play-button" disabled="" id="importFromPlay" type="button">
         Import from Play
       </button>
-
-      <div id="lookupFeedback" class="lookup-feedback" aria-live="polite"></div>
-
-      <details class="strategy-ladder-details">
-        <summary>Complete Decision Ladder</summary>
-        <div class="decision-ladder">
-          <div class="page">
+<div aria-live="polite" class="lookup-feedback" id="lookupFeedback"></div>
+<details class="strategy-ladder-details">
+<summary>Complete Decision Ladder</summary>
+<div class="decision-ladder">
+<div class="page">
 <header class="hero">
-    <div class="eyebrow">9/6 Jacks or Better · Full-Pay Strategy</div>
-    <h1>Complete Decision Ladder</h1>
-    <p>First handle any made hand. Otherwise, scan the numbered ladder from top to bottom and keep the first holding that appears in your five-card hand.</p>
-    <div class="instruction">Read downward · Stop at the first match</div>
-  </header>
-
-  <section class="section">
-    <div class="section-head">
-      <div><div class="eyebrow" style="color:var(--green2)">Checkpoint 1</div><h2>Handle made hands first</h2></div>
-      <div class="section-sub">Handle both groups before using the main ladder: automatic hands on top, then breakable made hands below.</div>
-    </div>
-    <div class="made-grid">
-      <div class="made-card">
-        <h3><span class="badge auto">AUTOMATIC</span> Never break these</h3>
-        <div class="made-row"><div class="made-name">Straight flush</div><div class="made-rule">Hold all five cards.</div></div>
-        <div class="made-row"><div class="made-name">Four of a kind</div><div class="made-rule">Hold the four matching cards. Keeping the kicker is EV-equivalent, but drawing one is standard.</div></div>
-        <div class="made-row"><div class="made-name">Full house</div><div class="made-rule">Hold all five cards.</div></div>
-        <div class="made-row"><div class="made-name">Three of a kind</div><div class="made-rule">Hold the trips; discard both kickers.</div></div>
-        <div class="made-row"><div class="made-name">Two pair</div><div class="made-rule">Hold both pairs; discard the fifth card.</div></div>
-      </div>
-      <div class="made-card">
-        <h3><span class="badge break">BREAKABLE</span> Usually hold, except…</h3>
-        <div class="made-row"><div class="made-name">Straight</div><div class="made-rule">Hold all five. <span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>only for four to a royal. An ordinary four to a straight flush does <strong>not</strong> break a straight.</div></div>
-        <div class="made-row"><div class="made-name">Flush</div><div class="made-rule">Hold all five. <span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>only for four to a royal.</div></div>
-        <div class="made-row"><div class="made-name">High pair</div><div class="made-rule">Hold Jacks or better. <span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>for four to a royal; <span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">2</span></span>for four to a straight flush.</div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="section-head">
-      <div><div class="eyebrow" style="color:var(--purple)">Checkpoint 2</div><h2>No-paying-hand ladder</h2></div>
-      <div class="section-sub">The five purple rungs use one compact statistic, so every non-royal three-card straight-flush draw fits directly into the main ladder.</div>
-    </div>
-    <div class="key-grid">
-      <div class="key-box"><div class="key-title">3SF score</div><div class="formula">Score = H + S</div><div class="key-text"><strong>H</strong> = held high cards (J, Q, K, A). <strong>S</strong> = distinct five-card straights containing the three suited ranks. Three to a royal is classified separately.</div></div>
-      <div class="key-box"><div class="key-title">Switch notation</div><div class="key-text"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">10</span></span>means use rung 10 when the printed condition is met. Earlier rungs still take precedence.</div></div>
-    </div>
-
-    <div class="ladder">
-      <div class="rung royal"><div class="num">1</div><div><div class="hold-title">Four to a royal flush</div><div class="hold-sub">The strongest incomplete holding.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">10</span><span class="s">♥</span></span><span class="card red"><span class="r">J</span><span class="s">♥</span></span><span class="card red"><span class="r">Q</span><span class="s">♥</span></span><span class="card red"><span class="r">K</span><span class="s">♥</span></span></div><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♠</span></span><span class="card black"><span class="r">Q</span><span class="s">♠</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span><span class="card black"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">Keep the four suited royal cards.</div></div>
-
-      <div class="rung draw"><div class="num">2</div><div><div class="hold-title">Four to a straight flush</div><div class="hold-sub">Any valid four-card straight-flush draw.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">5</span><span class="s">♣</span></span><span class="card black"><span class="r">6</span><span class="s">♣</span></span><span class="card black"><span class="r">7</span><span class="s">♣</span></span><span class="card black"><span class="r">9</span><span class="s">♣</span></span></div><div class="example-group"><span class="card red"><span class="r">9</span><span class="s">♦</span></span><span class="card red"><span class="r">J</span><span class="s">♦</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span><span class="card red"><span class="r">K</span><span class="s">♦</span></span></div></div><div class="condition">This outranks a high pair, but not a made straight.</div></div>
-
-      <div class="rung royal"><div class="num">3</div><div><div class="hold-title">Three to a royal flush</div><div class="hold-sub">Usually selected before four to a flush.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">10</span><span class="s">♥</span></span><span class="card red"><span class="r">J</span><span class="s">♥</span></span><span class="card red"><span class="r">Q</span><span class="s">♥</span></span></div><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♠</span></span><span class="card black"><span class="r">Q</span><span class="s">♠</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">4</span></span>for T-J-A, T-Q-A, or T-K-A suited when a low fourth card shares the suit and the off-suit card is T, J, Q, or K.</div></div>
-
-      <div class="rung draw"><div class="num">4</div><div><div class="hold-title">Four to a flush</div><div class="hold-sub">Four cards of one suit.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">2</span><span class="s">♥</span></span><span class="card red"><span class="r">5</span><span class="s">♥</span></span><span class="card red"><span class="r">8</span><span class="s">♥</span></span><span class="card red"><span class="r">K</span><span class="s">♥</span></span></div></div><div class="condition">Keep the four suited cards.</div></div>
-
-      <div class="rung special"><div class="num">5</div><div><div class="hold-title">Exact hand: T-T-J-Q-K</div><div class="hold-sub">The lone low-pair/open-straight reversal.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">10</span><span class="s">♠</span></span><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">Q</span><span class="s">♥</span></span><span class="card red"><span class="r">K</span><span class="s">♦</span></span></div></div><div class="condition">Break the pair of tens and hold T-J-Q-K. Either ten is equivalent.</div></div>
-
-      <div class="rung draw"><div class="num">6</div><div><div class="hold-title">Low pair</div><div class="hold-sub">Tens or lower.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">7</span><span class="s">♠</span></span><span class="card red"><span class="r">7</span><span class="s">♦</span></span></div><div class="example-group"><span class="card black"><span class="r">10</span><span class="s">♣</span></span><span class="card red"><span class="r">10</span><span class="s">♥</span></span></div></div><div class="condition">Break a low pair for three to a royal, four to a flush, or the stronger rungs above.</div></div>
-
-      <div class="rung draw"><div class="num">7</div><div><div class="hold-title">Four-card open-ended straight</div><div class="hold-sub">Any ordinary two-ended four-card straight draw.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">4</span><span class="s">♣</span></span><span class="card red"><span class="r">5</span><span class="s">♦</span></span><span class="card black"><span class="r">6</span><span class="s">♠</span></span><span class="card red"><span class="r">7</span><span class="s">♥</span></span></div></div><div class="condition">Three to a royal and a low pair normally outrank it; T-T-J-Q-K was handled at rung 5.</div></div>
-
-      <div class="rung sf"><div class="num">8</div><div><div class="hold-title">3SF score 3 or higher</div><div class="hold-sub">Strong three-card straight-flush draws.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">5</span><span class="s">♣</span></span><span class="card black"><span class="r">6</span><span class="s">♣</span></span><span class="card black"><span class="r">7</span><span class="s">♣</span></span></div><div class="example-group"><span class="card red"><span class="r">8</span><span class="s">♥</span></span><span class="card red"><span class="r">9</span><span class="s">♥</span></span><span class="card red"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H + S ≥ 3</span> Examples: 5-6-7 has H=0, S=3; 8-9-J has H=1, S=2.</div></div>
-
-      <div class="rung high"><div class="num">9</div><div><div class="hold-title">J-Q suited</div><div class="hold-sub">The strongest ordinary two-card suited-high hold.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card black"><span class="r">Q</span><span class="s">♣</span></span></div></div><div class="condition"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">10</span></span>if K and A are also present and the fifth card is either a 9 or shares the J-Q suit.</div></div>
-
-      <div class="rung draw"><div class="num">10</div><div><div class="hold-title">J-Q-K-A</div><div class="hold-sub">Four-card inside straight with four high cards.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span><span class="card red"><span class="r">K</span><span class="s">♥</span></span><span class="card black"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">Selected only after higher royal, flush, 3SF, and J-Q-suited tests fail.</div></div>
-
-      <div class="rung high"><div class="num">11</div><div><div class="hold-title">Two suited high cards, except J-Q</div><div class="hold-sub">J-K, J-A, Q-K, Q-A, or K-A suited.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♠</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div><div class="example-group"><span class="card red"><span class="r">Q</span><span class="s">♦</span></span><span class="card red"><span class="r">A</span><span class="s">♦</span></span></div></div><div class="condition">J-Q suited has its own higher rung because it competes differently with J-Q-K-A.</div></div>
-
-      <div class="rung sf"><div class="num">12</div><div><div class="hold-title">3SF score 2 with A, J, or no high card</div><div class="hold-sub">Middle straight-flush group.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">2</span><span class="s">♣</span></span><span class="card black"><span class="r">3</span><span class="s">♣</span></span><span class="card black"><span class="r">4</span><span class="s">♣</span></span></div><div class="example-group"><span class="card red"><span class="r">7</span><span class="s">♥</span></span><span class="card red"><span class="r">8</span><span class="s">♥</span></span><span class="card red"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> Includes A- or J-high patterns with one possible straight, plus no-high patterns with two possible straights.</div></div>
-
-      <div class="rung draw"><div class="num">13</div><div><div class="hold-title">Selected four-card inside straights</div><div class="hold-sub">Exactly these three rank sets.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">9</span><span class="s">♣</span></span><span class="card red"><span class="r">J</span><span class="s">♦</span></span><span class="card black"><span class="r">Q</span><span class="s">♠</span></span><span class="card red"><span class="r">K</span><span class="s">♥</span></span></div><div class="example-group"><span class="card black"><span class="r">10</span><span class="s">♣</span></span><span class="card red"><span class="r">J</span><span class="s">♦</span></span><span class="card black"><span class="r">Q</span><span class="s">♠</span></span><span class="card red"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition"><strong>9-J-Q-K, T-J-Q-A, or T-J-K-A.</strong></div></div>
-
-      <div class="rung sf"><div class="num">14</div><div><div class="hold-title">3SF score 2 with Q</div><div class="hold-sub">Only two possible rank patterns.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">8</span><span class="s">♥</span></span><span class="card red"><span class="r">9</span><span class="s">♥</span></span><span class="card red"><span class="r">Q</span><span class="s">♥</span></span></div><div class="example-group"><span class="card black"><span class="r">8</span><span class="s">♠</span></span><span class="card black"><span class="r">10</span><span class="s">♠</span></span><span class="card black"><span class="r">Q</span><span class="s">♠</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> Equivalent to 8-9-Q suited or 8-T-Q suited.</div></div>
-
-      <div class="rung high"><div class="num">15</div><div><div class="hold-title">J-Q-K</div><div class="hold-sub">Three unsuited high cards.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition">The only ordinary three-high-card combination kept as all three.</div></div>
-
-      <div class="rung high"><div class="num">16</div><div><div class="hold-title">J-Q unsuited</div><div class="hold-sub">Two high cards.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span></div></div><div class="condition">Separated from the other unsuited pairs because its priority is higher.</div></div>
-
-      <div class="rung draw"><div class="num">17</div><div><div class="hold-title">T-Q-K-A</div><div class="hold-sub">Four-card inside straight.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">10</span><span class="s">♣</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span><span class="card red"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition">Its position below J-Q reflects the competing high-card options.</div></div>
-
-      <div class="rung sf"><div class="num">18</div><div><div class="hold-title">3SF score 2 with K</div><div class="hold-sub">Exactly 9-T-K suited.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">9</span><span class="s">♠</span></span><span class="card black"><span class="r">10</span><span class="s">♠</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> The only non-royal score-2 3SF whose sole high card is K.</div></div>
-
-      <div class="rung high"><div class="num">19</div><div><div class="hold-title">T-J suited</div><div class="hold-sub">A two-card royal draw.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">10</span><span class="s">♥</span></span><span class="card red"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">20</span></span>with an off-suit K and another card of the T-J suit.</div></div>
-
-      <div class="rung high"><div class="num">20</div><div><div class="hold-title">J-K or Q-K unsuited</div><div class="hold-sub">Two high cards.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">K</span><span class="s">♦</span></span></div><div class="example-group"><span class="card red"><span class="r">Q</span><span class="s">♥</span></span><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition">These beat T-Q suited but normally lose to unpenalized T-J suited.</div></div>
-
-      <div class="rung high"><div class="num">21</div><div><div class="hold-title">T-Q suited</div><div class="hold-sub">A two-card royal draw.</div></div><div class="examples"><div class="example-group"><span class="card red"><span class="r">10</span><span class="s">♦</span></span><span class="card red"><span class="r">Q</span><span class="s">♦</span></span></div></div><div class="condition"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">22</span></span>with an off-suit A and another card of the T-Q suit.</div></div>
-
-      <div class="rung high"><div class="num">22</div><div><div class="hold-title">J-A, Q-A, or K-A unsuited</div><div class="hold-sub">Remaining two-high-card combinations.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">J</span><span class="s">♣</span></span><span class="card red"><span class="r">A</span><span class="s">♦</span></span></div><div class="example-group"><span class="card red"><span class="r">Q</span><span class="s">♥</span></span><span class="card black"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">T-J and T-Q suited may outrank these according to the earlier rungs.</div></div>
-
-      <div class="rung high"><div class="num">23</div><div><div class="hold-title">T-K suited</div><div class="hold-sub">The weakest retained two-card royal fragment.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">10</span><span class="s">♣</span></span><span class="card black"><span class="r">K</span><span class="s">♣</span></span></div></div><div class="condition"><span class="switch"><span class="switch-arrow">↳</span><span class="switch-num">24</span></span>with both an off-suit 9 and another card of the T-K suit.</div></div>
-
-      <div class="rung high"><div class="num">24</div><div><div class="hold-title">One high card</div><div class="hold-sub">J, Q, K, or A.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">K</span><span class="s">♠</span></span></div><div class="example-group"><span class="card red"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition">Keep the single high card when no higher-ranked hold exists.</div></div>
-
-      <div class="rung sf"><div class="num">25</div><div><div class="hold-title">3SF score 1</div><div class="hold-sub">Weak straight-flush draws with no high cards.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">2</span><span class="s">♣</span></span><span class="card black"><span class="r">3</span><span class="s">♣</span></span><span class="card black"><span class="r">6</span><span class="s">♣</span></span></div><div class="example-group"><span class="card red"><span class="r">5</span><span class="s">♥</span></span><span class="card red"><span class="r">8</span><span class="s">♥</span></span><span class="card red"><span class="r">9</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H=0, S=1</span> Beats discarding all five, but loses to any single high card.</div></div>
-
-      <div class="rung low"><div class="num">26</div><div><div class="hold-title">None of the above</div><div class="hold-sub">Discard all five.</div></div><div class="examples"><div class="example-group"><span class="card black"><span class="r">2</span><span class="s">♣</span></span><span class="card red"><span class="r">5</span><span class="s">♦</span></span><span class="card black"><span class="r">7</span><span class="s">♠</span></span><span class="card red"><span class="r">9</span><span class="s">♥</span></span><span class="card black"><span class="r">10</span><span class="s">♣</span></span></div></div><div class="condition">Draw five new cards.</div></div>
-    </div>
-
-  </section>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section id="challengePanel" class="panel challenge-panel hidden">
-      <div id="challengeActive">
-        <div class="challenge-heading-row">
-          <div>
-            <div class="challenge-kicker">EL JEFE CHALLENGE</div>
-            <h2 id="challengeProgress">Hand 1 of 200</h2>
-          </div>
-          <button id="exitChallenge" class="challenge-exit" type="button">Exit</button>
-        </div>
-
-        <p>Choose the optimal hold and lock it in. Your answers stay secret until all 200 hands are complete.</p>
-        <div id="challengeMadeHand" class="made-hand" aria-live="polite"></div>
-        <div id="challengeHand" class="hand" aria-label="El Jefe Challenge hand"></div>
-        <div id="challengeSelection" class="selection">Discard all five cards</div>
-
-        <div class="actions">
-          <button id="challengeSubmit" class="primary" type="button" disabled>Lock In Hold</button>
-        </div>
-      </div>
-
-      <div id="challengeSummary" class="challenge-summary hidden" aria-live="polite"></div>
-      <div id="challengeReview" class="challenge-review hidden" aria-live="polite"></div>
-    </section>
-
-    <footer>
-      <div class="footer-actions">
-        <a class="footer-link" href="https://jliese916.github.io/">Return to Casa del Jefe</a>
-      </div>
-    </footer>
-  </main>
-  <script src="./app.js" defer></script>
+<div class="eyebrow">9/6 Jacks or Better · Full-Pay Strategy</div>
+<h1>Complete Decision Ladder</h1>
+<p>First handle any made hand. Otherwise, scan the numbered ladder from top to bottom and keep the first holding that appears in your five-card hand.</p>
+<div class="instruction">Read downward · Stop at the first match</div>
+</header>
+<section class="section">
+<div class="section-head">
+<div><div class="eyebrow" style="color:var(--green2)">Checkpoint 1</div><h2>Handle made hands first</h2></div>
+<div class="section-sub">Handle both groups before using the main ladder: unbreakable hands on top, then breakable made hands below.</div>
+</div>
+<div class="made-grid">
+<div class="made-card">
+<h3><span class="badge auto">UNBREAKABLE</span> Never break these</h3>
+<div class="made-row"><div class="made-name">Straight flush</div><div class="made-rule">Hold all five cards.</div></div>
+<div class="made-row"><div class="made-name">Four of a kind</div><div class="made-rule">Hold the four matching cards. Keeping the kicker is EV-equivalent, but drawing one is standard.</div></div>
+<div class="made-row"><div class="made-name">Full house</div><div class="made-rule">Hold all five cards.</div></div>
+<div class="made-row"><div class="made-name">Three of a kind</div><div class="made-rule">Hold the trips; discard both kickers.</div></div>
+<div class="made-row"><div class="made-name">Two pair</div><div class="made-rule">Hold both pairs; discard the fifth card.</div></div>
+</div>
+<div class="made-card">
+<h3><span class="badge break">BREAKABLE</span> Usually hold, except…</h3>
+<div class="made-row"><div class="made-name">Straight</div><div class="made-rule">Hold all five. <span class="switch to-1"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>only for four to a royal. An ordinary four to a straight flush does <strong>not</strong> break a straight.</div></div>
+<div class="made-row"><div class="made-name">Flush</div><div class="made-rule">Hold all five. <span class="switch to-1"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>only for four to a royal.</div></div>
+<div class="made-row"><div class="made-name">High pair</div><div class="made-rule">Hold Jacks or better. <span class="switch to-1"><span class="switch-arrow">↳</span><span class="switch-num">1</span></span>for four to a royal; <span class="switch to-2"><span class="switch-arrow">↳</span><span class="switch-num">2</span></span>for four to a straight flush.</div></div>
+</div>
+</div>
+</section>
+<section class="section">
+<div class="section-head">
+<div><div class="eyebrow" style="color:var(--purple)">Checkpoint 2</div><h2>Non-made-hand ladder</h2></div>
+<div class="section-sub">The five purple rungs use one compact statistic, so every non-royal three-card straight-flush draw (3SF) fits directly into the main ladder.</div>
+</div>
+<div class="key-grid">
+<div class="key-box"><div class="key-title">3SF score</div><div class="formula">Score = H + S</div><div class="key-text"><strong>H</strong> = held high cards (J, Q, K, A). <strong>S</strong> = distinct five-card straights containing the three suited ranks. Three to a royal is classified separately.</div></div>
+<div class="key-box"><div class="key-title">Switch notation</div><div class="key-text"><span class="switch to-10"><span class="switch-arrow">↳</span><span class="switch-num">10</span></span>means use rung 10 when the printed condition is met. Earlier rungs still take precedence.</div></div>
+</div>
+<div class="ladder">
+<div class="rung royal"><div class="num">1</div><div><div class="hold-title">Four to a royal flush</div><div class="hold-sub">The strongest incomplete holding.</div></div><div class="examples"><div class="example-group"><span class="card suit-heart"><span class="r">10</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">J</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">K</span><span class="s">♥</span></span></div><div class="example-group"><span class="card suit-spade"><span class="r">J</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">Q</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">Keep the four suited royal cards.</div></div>
+<div class="rung draw"><div class="num">2</div><div><div class="hold-title">Four to a straight flush</div><div class="hold-sub">Any valid four-card straight-flush draw.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">5</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">6</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">7</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">9</span><span class="s">♣</span></span></div><div class="example-group"><span class="card suit-diamond"><span class="r">9</span><span class="s">♦</span></span><span class="card suit-diamond"><span class="r">J</span><span class="s">♦</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span><span class="card suit-diamond"><span class="r">K</span><span class="s">♦</span></span></div></div><div class="condition">This outranks a high pair, but not a made straight.</div></div>
+<div class="rung royal"><div class="num">3</div><div><div class="hold-title">Three to a royal flush</div><div class="hold-sub">Usually selected before four to a flush.</div></div><div class="examples"><div class="example-group"><span class="card suit-heart"><span class="r">10</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">J</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span></div><div class="example-group"><span class="card suit-spade"><span class="r">J</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">Q</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition"><span class="switch to-4"><span class="switch-arrow">↳</span><span class="switch-num">4</span></span>for T-J-A, T-Q-A, or T-K-A suited when a low fourth card shares the suit and the off-suit card is T, J, Q, or K.</div></div>
+<div class="rung draw"><div class="num">4</div><div><div class="hold-title">Four to a flush</div><div class="hold-sub">Four cards of one suit.</div></div><div class="examples"><div class="example-group"><span class="card suit-heart"><span class="r">2</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">5</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">8</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">K</span><span class="s">♥</span></span></div></div><div class="condition">Keep the four suited cards.</div></div>
+<div class="rung special"><div class="num">5</div><div><div class="hold-title">Exact hand: T-T-J-Q-K</div><div class="hold-sub">The lone low-pair/open-straight reversal.</div></div><div class="examples"><div class="example-group"><span class="card suit-spade"><span class="r">10</span><span class="s">♠</span></span><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span><span class="card suit-diamond"><span class="r">K</span><span class="s">♦</span></span></div></div><div class="condition">Break the pair of tens and hold T-J-Q-K. Either ten is equivalent.</div></div>
+<div class="rung draw"><div class="num">6</div><div><div class="hold-title">Low pair</div><div class="hold-sub">Tens or lower.</div></div><div class="examples"><div class="example-group"><span class="card suit-spade"><span class="r">7</span><span class="s">♠</span></span><span class="card suit-diamond"><span class="r">7</span><span class="s">♦</span></span></div><div class="example-group"><span class="card suit-club"><span class="r">10</span><span class="s">♣</span></span><span class="card suit-heart"><span class="r">10</span><span class="s">♥</span></span></div></div><div class="condition">Break a low pair for three to a royal, four to a flush, or the stronger rungs above.</div></div>
+<div class="rung draw"><div class="num">7</div><div><div class="hold-title">Four-card open-ended straight</div><div class="hold-sub">Any ordinary two-ended four-card straight draw.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">4</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">5</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">6</span><span class="s">♠</span></span><span class="card suit-heart"><span class="r">7</span><span class="s">♥</span></span></div></div><div class="condition">Three to a royal and a low pair normally outrank it; T-T-J-Q-K was handled at rung 5.</div></div>
+<div class="rung sf"><div class="num">8</div><div><div class="hold-title">3SF score 3 or higher</div><div class="hold-sub">Strong non-royal three-card straight-flush draws (3SF).</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">5</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">6</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">7</span><span class="s">♣</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">8</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">9</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H + S ≥ 3</span> Examples: 5-6-7 has H=0, S=3; 8-9-J has H=1, S=2.</div></div>
+<div class="rung high"><div class="num">9</div><div><div class="hold-title">J-Q suited</div><div class="hold-sub">The strongest ordinary two-card suited-high hold.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">Q</span><span class="s">♣</span></span></div></div><div class="condition"><span class="switch to-10"><span class="switch-arrow">↳</span><span class="switch-num">10</span></span>if K and A are also present and the fifth card is either a 9 or shares the J-Q suit.</div></div>
+<div class="rung draw"><div class="num">10</div><div><div class="hold-title">J-Q-K-A</div><div class="hold-sub">Four-card inside straight with four high cards.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span><span class="card suit-heart"><span class="r">K</span><span class="s">♥</span></span><span class="card suit-spade"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">Selected only after higher royal, flush, 3SF, and J-Q-suited tests fail.</div></div>
+<div class="rung high"><div class="num">11</div><div><div class="hold-title">Two suited high cards, except J-Q</div><div class="hold-sub">J-K, J-A, Q-K, Q-A, or K-A suited.</div></div><div class="examples"><div class="example-group"><span class="card suit-spade"><span class="r">J</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div><div class="example-group"><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span><span class="card suit-diamond"><span class="r">A</span><span class="s">♦</span></span></div></div><div class="condition">J-Q suited has its own higher rung because it competes differently with J-Q-K-A.</div></div>
+<div class="rung sf"><div class="num">12</div><div><div class="hold-title">3SF score 2 with A, J, or no high card</div><div class="hold-sub">Middle straight-flush group.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">2</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">3</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">4</span><span class="s">♣</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">7</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">8</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> Includes A- or J-high patterns with one possible straight, plus no-high patterns with two possible straights.</div></div>
+<div class="rung draw"><div class="num">13</div><div><div class="hold-title">Selected four-card inside straights</div><div class="hold-sub">Exactly these three rank sets.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">9</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">J</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">Q</span><span class="s">♠</span></span><span class="card suit-heart"><span class="r">K</span><span class="s">♥</span></span></div><div class="example-group"><span class="card suit-club"><span class="r">10</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">J</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">Q</span><span class="s">♠</span></span><span class="card suit-heart"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition"><strong>9-J-Q-K, T-J-Q-A, or T-J-K-A.</strong></div></div>
+<div class="rung sf"><div class="num">14</div><div><div class="hold-title">3SF score 2 with Q</div><div class="hold-sub">Only two possible rank patterns.</div></div><div class="examples"><div class="example-group"><span class="card suit-heart"><span class="r">8</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">9</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span></div><div class="example-group"><span class="card suit-spade"><span class="r">8</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">10</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">Q</span><span class="s">♠</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> Equivalent to 8-9-Q suited or 8-T-Q suited.</div></div>
+<div class="rung high"><div class="num">15</div><div><div class="hold-title">J-Q-K</div><div class="hold-sub">Three unsuited high cards.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition">The only ordinary three-high-card combination kept as all three.</div></div>
+<div class="rung high"><div class="num">16</div><div><div class="hold-title">J-Q unsuited</div><div class="hold-sub">Two high cards.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span></div></div><div class="condition">Separated from the other unsuited pairs because its priority is higher.</div></div>
+<div class="rung draw"><div class="num">17</div><div><div class="hold-title">T-Q-K-A</div><div class="hold-sub">Four-card inside straight.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">10</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span><span class="card suit-heart"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition">Its position below J-Q reflects the competing high-card options.</div></div>
+<div class="rung sf"><div class="num">18</div><div><div class="hold-title">3SF score 2 with K</div><div class="hold-sub">Exactly 9-T-K suited.</div></div><div class="examples"><div class="example-group"><span class="card suit-spade"><span class="r">9</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">10</span><span class="s">♠</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition"><span class="score">H + S = 2</span> The only non-royal score-2 3SF whose sole high card is K.</div></div>
+<div class="rung high"><div class="num">19</div><div><div class="hold-title">T-J suited</div><div class="hold-sub">A two-card royal draw.</div></div><div class="examples"><div class="example-group"><span class="card suit-heart"><span class="r">10</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">J</span><span class="s">♥</span></span></div></div><div class="condition"><span class="switch to-20"><span class="switch-arrow">↳</span><span class="switch-num">20</span></span>with an off-suit K and another card of the T-J suit.</div></div>
+<div class="rung high"><div class="num">20</div><div><div class="hold-title">J-K or Q-K unsuited</div><div class="hold-sub">Two high cards.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">K</span><span class="s">♦</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div></div><div class="condition">These beat T-Q suited but normally lose to unpenalized T-J suited.</div></div>
+<div class="rung high"><div class="num">21</div><div><div class="hold-title">T-Q suited</div><div class="hold-sub">A two-card royal draw.</div></div><div class="examples"><div class="example-group"><span class="card suit-diamond"><span class="r">10</span><span class="s">♦</span></span><span class="card suit-diamond"><span class="r">Q</span><span class="s">♦</span></span></div></div><div class="condition"><span class="switch to-22"><span class="switch-arrow">↳</span><span class="switch-num">22</span></span>with an off-suit A and another card of the T-Q suit.</div></div>
+<div class="rung high"><div class="num">22</div><div><div class="hold-title">J-A, Q-A, or K-A unsuited</div><div class="hold-sub">Remaining two-high-card combinations.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">J</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">A</span><span class="s">♦</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">Q</span><span class="s">♥</span></span><span class="card suit-spade"><span class="r">A</span><span class="s">♠</span></span></div></div><div class="condition">T-J and T-Q suited may outrank these according to the earlier rungs.</div></div>
+<div class="rung high"><div class="num">23</div><div><div class="hold-title">T-K suited</div><div class="hold-sub">The weakest retained two-card royal fragment.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">10</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">K</span><span class="s">♣</span></span></div></div><div class="condition"><span class="switch to-24"><span class="switch-arrow">↳</span><span class="switch-num">24</span></span>with both an off-suit 9 and another card of the T-K suit.</div></div>
+<div class="rung high"><div class="num">24</div><div><div class="hold-title">One high card</div><div class="hold-sub">J, Q, K, or A.</div></div><div class="examples"><div class="example-group"><span class="card suit-spade"><span class="r">K</span><span class="s">♠</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">A</span><span class="s">♥</span></span></div></div><div class="condition">Keep the single high card when no higher-ranked hold exists.</div></div>
+<div class="rung sf"><div class="num">25</div><div><div class="hold-title">3SF score 1</div><div class="hold-sub">Weak straight-flush draws with no high cards.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">2</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">3</span><span class="s">♣</span></span><span class="card suit-club"><span class="r">6</span><span class="s">♣</span></span></div><div class="example-group"><span class="card suit-heart"><span class="r">5</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">8</span><span class="s">♥</span></span><span class="card suit-heart"><span class="r">9</span><span class="s">♥</span></span></div></div><div class="condition"><span class="score">H=0, S=1</span> Beats discarding all five, but loses to any single high card.</div></div>
+<div class="rung low"><div class="num">26</div><div><div class="hold-title">None of the above</div><div class="hold-sub">Discard all five.</div></div><div class="examples"><div class="example-group"><span class="card suit-club"><span class="r">2</span><span class="s">♣</span></span><span class="card suit-diamond"><span class="r">5</span><span class="s">♦</span></span><span class="card suit-spade"><span class="r">7</span><span class="s">♠</span></span><span class="card suit-heart"><span class="r">9</span><span class="s">♥</span></span><span class="card suit-club"><span class="r">10</span><span class="s">♣</span></span></div></div><div class="condition">Draw five new cards.</div></div>
+</div>
+</section>
+</div>
+</div>
+</details>
+</section>
+<section class="panel challenge-panel hidden" id="challengePanel">
+<div id="challengeActive">
+<div class="challenge-heading-row">
+<div>
+<div class="challenge-kicker">EL JEFE CHALLENGE</div>
+<h2 id="challengeProgress">Hand 1 of 200</h2>
+</div>
+<button class="challenge-exit" id="exitChallenge" type="button">Exit</button>
+</div>
+<p>Choose the optimal hold and lock it in. Your answers stay secret until all 200 hands are complete.</p>
+<div aria-live="polite" class="made-hand" id="challengeMadeHand"></div>
+<div aria-label="El Jefe Challenge hand" class="hand" id="challengeHand"></div>
+<div class="selection" id="challengeSelection">Discard all five cards</div>
+<div class="actions">
+<button class="primary" disabled="" id="challengeSubmit" type="button">Lock In Hold</button>
+</div>
+</div>
+<div aria-live="polite" class="challenge-summary hidden" id="challengeSummary"></div>
+<div aria-live="polite" class="challenge-review hidden" id="challengeReview"></div>
+</section>
+<footer>
+<div class="footer-actions">
+<a class="footer-link" href="https://jliese916.github.io/">Return to Casa del Jefe</a>
+</div>
+</footer>
+</main>
+<script defer="" src="./app.js"></script>
 </body>
 </html>
