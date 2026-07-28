@@ -1,4 +1,4 @@
-# El Jefe's Jacks or Better Trainer — Version 21
+# El Jefe's Jacks or Better Trainer — Version 23
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -42,3 +42,11 @@ Then open `http://localhost:8000`.
 ## Deploy to GitHub Pages
 
 Replace the existing site files with the contents of this folder and commit them to the branch used by GitHub Pages. The included strategy JSON must be deployed beside `index.html`.
+
+
+## Version 23 changes
+
+- Combines session reset and incorrect-hand review into one full-width Session Review card.
+- Standardizes the Play-area support widths for a cleaner layout consistent with Blackjack.
+- Retains the Casa del Jefe crest card backs, decision ladder, and all Version 22 features.
+- Service-worker cache: `el-jefe-jacks-trainer-v23`.

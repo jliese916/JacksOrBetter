@@ -69,7 +69,8 @@
 <button aria-selected="false" class="mode-tab" id="trainTab" type="button">Train</button>
 <button aria-selected="false" class="mode-tab" id="lookupTab" type="button">Look Up</button>
 </nav>
-<section class="panel" id="playPanel">
+<section class="panel play-panel" id="playPanel">
+<section class="play-game-card">
 <div aria-label="Play statistics" class="play-stats">
 <div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
 <div class="play-accuracy-stat">
@@ -81,6 +82,15 @@
 </div>
 <div><small>BET</small><strong>5 units</strong></div>
 </div>
+<p>Deal, tap the cards you want to hold, then draw.</p>
+<div aria-live="polite" class="made-hand" id="playMadeHand"></div>
+<div aria-label="Current play hand" class="hand" id="playHand"></div>
+<div class="selection" id="playSelection">Press Deal to begin.</div>
+<div class="actions">
+<button class="primary" id="playAction">Deal (-5)</button>
+</div>
+<div aria-live="polite" class="feedback" id="playFeedback"></div>
+</section>
 <section aria-label="Running balance chart" class="balance-chart-card">
 <div class="balance-chart-heading">
 <span>Bankroll history</span>
@@ -93,22 +103,19 @@
 <div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0 units</div>
 <canvas aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards" class="balance-chart" id="playBalanceChart" role="img"></canvas>
 </section>
-<p>Deal, tap the cards you want to hold, then draw.</p>
-<div aria-live="polite" class="made-hand" id="playMadeHand"></div>
-<div aria-label="Current play hand" class="hand" id="playHand"></div>
-<div class="selection" id="playSelection">Press Deal to begin.</div>
-<div class="actions">
-<button class="primary" id="playAction">Deal (-5)</button>
+<section aria-label="Session review and controls" class="session-hub">
+<div class="session-hub-heading">
+<div>
+<strong>Session review</strong>
+<small>Review every incorrect hold from this session.</small>
 </div>
-<div aria-live="polite" class="feedback" id="playFeedback"></div>
-<details class="play-settings review-details" id="playMissedDetails">
+<button class="danger-link session-reset-button" id="resetBalance" type="button">Reset session</button>
+</div>
+<details class="review-details session-review-list" id="playMissedDetails">
 <summary>Incorrect hands this session (<span id="playMissedCount">0</span>)</summary>
 <div class="play-missed-list" id="playMissedList"></div>
 </details>
-<details class="play-settings">
-<summary>Session controls</summary>
-<button class="danger-link" id="resetBalance" type="button">Reset balance and history</button>
-</details>
+</section>
 </section>
 <section class="panel hidden" id="trainPanel">
 <p>Tap the cards you would keep, then check your answer.</p>
