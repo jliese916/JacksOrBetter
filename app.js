@@ -1310,7 +1310,7 @@ function renderPlay() {
 
   if (state.playHand.length === 0) {
     for (let i = 0; i < 5; i += 1) {
-      el.playHand.append(cardButton(1, { placeholder: true }));
+      el.playHand.append(cardButton(1, { cardBack: true }));
     }
   } else {
     state.playHand.forEach((card, index) => {
