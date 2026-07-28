@@ -65,3 +65,8 @@ Replace the existing site files with the contents of this folder and commit them
 - Places **Import from Play** before the manual result action, then keeps **Find Best Hold** as the final step below.
 - Retains the darker empty Lookup card slots and branded initial Play card backs.
 - Service-worker cache: `el-jefe-jacks-trainer-v26`.
+
+
+## Version 27
+- Restyled the Look Up optimal-hold result area to the Casa del Jefe dark emerald and gold theme.
+- Removed the oversized light result bubble while preserving light card faces for readability.

@@ -646,3 +646,39 @@ footer{color:var(--casa-muted)}
 .lookup-actions .import-play-button:disabled{opacity:.38!important}
 .lookup-find-actions{margin-top:12px!important}
 .lookup-find-actions .primary{min-width:170px!important}
+
+/* Version 27: Casa-themed lookup result panel */
+#lookupFeedback:not(:empty){
+  width:min(520px,100%);
+  margin:18px auto 0!important;
+  padding:14px 12px;
+  border:1px solid rgba(201,162,58,.42);
+  border-radius:16px;
+  background:linear-gradient(155deg,rgba(23,74,53,.94),rgba(7,16,13,.98));
+  box-shadow:0 12px 28px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.035);
+  color:var(--casa-cream);
+}
+#lookupFeedback .result-heading{
+  margin:0 0 10px;
+  color:var(--casa-gold-soft);
+  font-weight:900;
+  letter-spacing:.035em;
+}
+#lookupFeedback .hold-results{gap:8px}
+#lookupFeedback .hold-result{
+  padding:10px 8px;
+  border:1px solid rgba(201,162,58,.25);
+  border-radius:12px;
+  background:rgba(0,0,0,.22);
+  box-shadow:inset 0 1px rgba(255,255,255,.025);
+}
+#lookupFeedback .hold-result-label{
+  margin-bottom:7px;
+  color:var(--casa-muted);
+}
+#lookupFeedback .discard-all{color:var(--casa-cream)}
+#lookupFeedback .mini-card{
+  border-color:#d8ccb0;
+  background:#fffdf8;
+  box-shadow:0 3px 7px rgba(0,0,0,.24);
+}
