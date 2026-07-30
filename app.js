@@ -1329,7 +1329,7 @@ function renderPlay() {
     el.playMadeHand.textContent = "";
     el.playMadeHand.classList.remove("visible");
     el.playSelection.textContent = "Press Deal to begin.";
-    el.playAction.textContent = "Deal (-5)";
+    el.playAction.textContent = "Deal";
     el.playAction.disabled = false;
   } else if (state.playPhase === "dealing") {
     el.playMadeHand.textContent = "";
@@ -1353,7 +1353,7 @@ function renderPlay() {
       el.playAction.textContent = "Draw";
     } else {
       el.playSelection.textContent = "Hand complete.";
-      el.playAction.textContent = "Deal Next Hand (-5)";
+      el.playAction.textContent = "Deal Next Hand";
     }
   }
 }

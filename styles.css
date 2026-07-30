@@ -682,3 +682,17 @@ footer{color:var(--casa-muted)}
   background:#fffdf8;
   box-shadow:0 3px 7px rgba(0,0,0,.24);
 }
+
+
+/* Version 28: stable tab alignment and linked masthead crest */
+html{scrollbar-gutter:stable}
+@supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
+.masthead-home-link{
+  position:absolute;left:50%;top:-54px;z-index:5;width:70px;height:70px;
+  transform:translateX(-50%);display:block;border-radius:50%;
+}
+.masthead-home-link .masthead-crest{
+  position:static;width:100%;height:100%;transform:none;display:block;
+}
+.masthead-home-link:focus-visible{outline:3px solid var(--casa-gold-soft);outline-offset:4px}
+@media(max-width:520px){.masthead-home-link{top:-43px;width:56px;height:56px}}

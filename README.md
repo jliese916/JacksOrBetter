@@ -70,3 +70,10 @@ Replace the existing site files with the contents of this folder and commit them
 ## Version 27
 - Restyled the Look Up optimal-hold result area to the Casa del Jefe dark emerald and gold theme.
 - Removed the oversized light result bubble while preserving light card faces for readability.
+
+## Version 28
+- Prevents horizontal recentering when switching among Play, Train, and Look Up by reserving the browser scrollbar gutter.
+- Removes the redundant wager amount from the Play deal-button labels.
+- Links the masthead crest to the Casa del Jefe home page.
+- Service-worker cache: `el-jefe-jacks-trainer-v28`.
+
