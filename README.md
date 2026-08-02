@@ -1,4 +1,4 @@
-# Casa del Jefe — Video Poker Hall
+# Casa del Jefe — Video Poker Hall v29
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -77,3 +77,12 @@ Replace the existing site files with the contents of this folder and commit them
 - Links the masthead crest to the Casa del Jefe home page.
 - Service-worker cache: `el-jefe-jacks-trainer-v28`.
 
+
+
+## Version 29
+
+- Standardized Play statistics as Balance / Accuracy / Bet in the Pai Gow-style top panel.
+- Standardized Train statistics as Hands / Accuracy in the same top-panel system.
+- Converted the Jacks or Better Play and Train rooms to the deeper green Pai Gow felt treatment.
+- Updated the perfect Grand Master certificate to the shared Casa del Jefe Hall of Masters design.
+- Service-worker cache: `el-jefe-jacks-trainer-v29`.

@@ -24,7 +24,7 @@
 <link href="./manifest.webmanifest" rel="manifest"/>
 <link href="./favicon-64.png" rel="icon" type="image/png"/>
 <link href="./apple-touch-icon.png" rel="apple-touch-icon"/>
-<link href="./styles.css" rel="stylesheet"/>
+<link href="./styles.css?v=29" rel="stylesheet"/>
 </head>
 <body>
 <main class="app">
@@ -70,17 +70,12 @@
 <button aria-selected="false" class="mode-tab" id="lookupTab" type="button">Look Up</button>
 </nav>
 <section class="panel play-panel" id="playPanel">
-<section class="play-game-card">
-<div aria-label="Play statistics" class="play-stats">
-<div><small>BALANCE</small><strong id="playBalance">0 units</strong></div>
-<div class="play-accuracy-stat">
-<small>ACCURACY</small>
-<span class="play-accuracy-line">
-<strong id="playAccuracy">0.0%</strong>
-<span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span>
-</span>
-</div>
-<div><small>BET</small><strong>5 units</strong></div>
+<section class="play-game-card casino-table">
+<div class="table-wordmark"><span>CASA DEL JEFE</span><small>VIDEO POKER HALL</small></div>
+<div aria-label="Play statistics" class="play-topline">
+<div><small>Balance</small><strong id="playBalance">0 units</strong></div>
+<div class="play-accuracy-stat"><small>Accuracy</small><span class="play-accuracy-line"><strong id="playAccuracy">0.0%</strong><span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span></span></div>
+<div><small>Bet</small><strong>5 units</strong></div>
 </div>
 <p>Deal, tap the cards you want to hold, then draw.</p>
 <div aria-live="polite" class="made-hand" id="playMadeHand"></div>
@@ -117,7 +112,10 @@
 </details>
 </section>
 </section>
-<section class="panel hidden" id="trainPanel">
+<section class="panel hidden train-panel" id="trainPanel">
+<section class="train-game-card casino-table">
+<div class="table-wordmark"><span>TRAINING ROOM</span><small>FIND THE BEST HOLD</small></div>
+<div aria-label="Training statistics" class="train-score" id="scorePanel"><div><small>Hands</small><strong id="score">0 / 0</strong></div><div><small>Accuracy</small><strong id="percentage">0.0%</strong></div></div>
 <p>Tap the cards you would keep, then check your answer.</p>
 <div aria-live="polite" class="made-hand" id="trainMadeHand"></div>
 <div class="hand" id="hand"></div>
@@ -127,11 +125,8 @@
 <button id="newHand">New Hand</button>
 </div>
 <div aria-live="polite" class="feedback" id="feedback"></div>
-<section class="score" id="scorePanel">
-<div><small>SCORE</small><strong id="score">0 / 0</strong></div>
-<div><small>PERCENTAGE</small><strong id="percentage">0.0%</strong></div>
-<button class="link" id="reset">Reset score</button>
 </section>
+<button class="link train-reset-link" id="reset">Reset training score</button>
 </section>
 <section class="panel hidden" id="lookupPanel">
 <p>Enter five cards by choosing a rank and then a suit.</p>
@@ -253,6 +248,6 @@
 </div>
 </footer>
 </main>
-<script defer="" src="./app.js"></script>
+<script defer="" src="./app.js?v=29"></script>
 </body>
 </html>

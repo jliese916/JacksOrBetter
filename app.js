@@ -529,25 +529,17 @@ function renderChallengeCertificate() {
     certificate.className = "certificate" + (perfect ? " grand-master" : "");
     certificate.innerHTML = perfect ? `
       <div class="grand-master-rays" aria-hidden="true"></div>
-      <div class="certificate-corner top-left">♠</div>
-      <div class="certificate-corner top-right red">♥</div>
-      <div class="certificate-corner bottom-left red">♦</div>
-      <div class="certificate-corner bottom-right">♣</div>
-      <div class="grand-master-stars">✦ &nbsp; 100% PERFECT &nbsp; ✦</div>
-      <div class="grand-master-crest" aria-hidden="true">♛</div>
-      <div class="certificate-small">THE HIGHEST EL JEFE DISTINCTION</div>
-      <div class="certificate-title">GRAND MASTER</div>
-      <div class="grand-master-subtitle">Certified by El Jefe!</div>
+      <div class="grand-master-stars" aria-hidden="true">♠ · ♦ · ♣ · ♥</div>
+      <div class="certificate-small">CASA DEL JEFE · HALL OF MASTERS</div>
+      <div class="certificate-title">JACKS OR BETTER<br>GRAND MASTER</div>
       <div class="certificate-rule"></div>
-      <p>This certifies flawless completion of the<br>
-      <strong>200-Hand El Jefe Challenge</strong></p>
-      <div class="certificate-score">${score} / ${CHALLENGE_HANDS} &nbsp;·&nbsp; ${percentage.toFixed(1)}%</div>
-      <p class="certificate-declaration"><strong>You are a certified Grand Master by El Jefe!</strong><br>
-      Your Jacks or Better strategy was perfect.</p>
-      <div class="certificate-date">Issued ${date}</div>
-      <div class="certificate-signature">El Jefe</div>
-      <div class="certificate-signature-label">Supreme Video Poker Authority</div>
-      <div class="certificate-share">Take a screenshot. This one belongs in the group text hall of fame.</div>
+      <p>This certifies a flawless performance in the ${CHALLENGE_HANDS}-hand El Jefe Jacks or Better Challenge.</p>
+      <div class="certificate-score">${CHALLENGE_HANDS} / ${CHALLENGE_HANDS} · 100%</div>
+      <div class="grand-master-crest" aria-hidden="true">♛</div>
+      <div class="grand-master-subtitle">Perfect Strategy</div>
+      <p>Certified by El Jefe</p>
+      <p>${date}</p>
+      <div class="certificate-share">Screenshot this Grand Master certificate and send it to the group text thread.</div>
     ` : `
       <div class="certificate-corner top-left">♠</div>
       <div class="certificate-corner top-right red">♥</div>

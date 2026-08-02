@@ -1,9 +1,9 @@
-const CACHE_NAME = "el-jefe-jacks-trainer-v28";
+const CACHE_NAME = "el-jefe-jacks-trainer-v29";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./styles.css?v=29",
+  "./app.js?v=29",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
