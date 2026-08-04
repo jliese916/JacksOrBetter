@@ -72,8 +72,13 @@ const el = {
   playMissedDetails: document.querySelector("#playMissedDetails"),
   playMissedCount: document.querySelector("#playMissedCount"),
   playMissedList: document.querySelector("#playMissedList"),
-  playFeedback: document.querySelector("#playFeedback")
+  playFeedback: document.querySelector("#playFeedback"),
+  updateNotice: document.querySelector("#updateNotice"),
+  reloadUpdate: document.querySelector("#reloadUpdate")
 };
+
+let balanceChartFrame = 0;
+let lastBalanceChartSignature = "";
 
 const state = {
   strategy: null,
@@ -206,9 +211,11 @@ function evaluateHand(hand) {
 
 function setMadeHand(element, hand) {
   const result = evaluateHand(hand);
-  element.textContent = result.name;
-  element.classList.toggle("visible", Boolean(result.name));
-  element.classList.toggle("small-pair", result.name === "Small Pair");
+  const displayedName = result.name === "Small Pair" ? "" : result.name;
+
+  element.textContent = displayedName;
+  element.classList.toggle("visible", Boolean(displayedName));
+  element.classList.remove("small-pair");
 }
 
 function deal() {
@@ -1050,9 +1057,17 @@ function playAction() {
   else if (!["dealing", "drawing"].includes(state.playPhase)) startPlayHand();
 }
 
+function scheduleBalanceChartDraw() {
+  if (balanceChartFrame) return;
+  balanceChartFrame = window.requestAnimationFrame(() => {
+    balanceChartFrame = 0;
+    drawBalanceChart();
+  });
+}
+
 function drawBalanceChart() {
   const canvas = el.playBalanceChart;
-  if (!canvas) return;
+  if (!canvas || canvas.offsetParent === null) return;
 
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return;
@@ -1060,6 +1075,13 @@ function drawBalanceChart() {
   const scale = window.devicePixelRatio || 1;
   const width = Math.max(1, Math.round(rect.width * scale));
   const height = Math.max(1, Math.round(rect.height * scale));
+  const actualValues = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
+  const optimalValues = state.playOptimalBalanceHistory.length
+    ? state.playOptimalBalanceHistory
+    : [0];
+  const signature = `${width}x${height}:${state.playAttempts}:${state.playBalance}:${state.playOptimalBalance}:${actualValues.length}:${optimalValues.length}`;
+  if (signature === lastBalanceChartSignature) return;
+  lastBalanceChartSignature = signature;
 
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
@@ -1070,10 +1092,6 @@ function drawBalanceChart() {
   context.setTransform(scale, 0, 0, scale, 0, 0);
   context.clearRect(0, 0, rect.width, rect.height);
 
-  const actualValues = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
-  const optimalValues = state.playOptimalBalanceHistory.length
-    ? state.playOptimalBalanceHistory
-    : [0];
   const allValues = [...actualValues, ...optimalValues];
   const pointCount = Math.max(actualValues.length, optimalValues.length);
   const padding = { left: 10, right: 84, top: 12, bottom: 14 };
@@ -1296,7 +1314,7 @@ function renderPlay() {
   el.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
   el.playDeltaSummary.classList.toggle("ahead", delta > 0);
   el.playDeltaSummary.classList.toggle("behind", delta < 0);
-  window.requestAnimationFrame(drawBalanceChart);
+  scheduleBalanceChartDraw();
 
   el.playHand.replaceChildren();
 
@@ -1388,12 +1406,12 @@ renderChallenge();
 
 if ("ResizeObserver" in window && el.playBalanceChart) {
   new ResizeObserver(() => {
-    if (state.mode === "play") drawBalanceChart();
+    if (state.mode === "play") scheduleBalanceChartDraw();
   }).observe(el.playBalanceChart);
 } else {
   window.addEventListener("resize", () => {
-    if (state.mode === "play") drawBalanceChart();
-  });
+    if (state.mode === "play") scheduleBalanceChartDraw();
+  }, { passive: true });
 }
 
 loadURL().catch(error => {
@@ -1402,7 +1420,57 @@ loadURL().catch(error => {
 });
 
 if ("serviceWorker" in navigator) {
+  let waitingWorker = null;
+  let reloadingForUpdate = false;
+
+  const showUpdateNotice = worker => {
+    if (!worker || !navigator.serviceWorker.controller || !el.updateNotice) return;
+    waitingWorker = worker;
+    el.updateNotice.classList.remove("hidden");
+  };
+
+  const watchedWorkers = new WeakSet();
+  const watchWorker = (registration, worker) => {
+    if (!worker || watchedWorkers.has(worker)) return;
+    watchedWorkers.add(worker);
+    const checkState = () => {
+      if (worker.state === "installed") showUpdateNotice(registration.waiting || worker);
+    };
+    worker.addEventListener("statechange", checkState);
+    checkState();
+  };
+
+  const watchRegistration = registration => {
+    if (registration.waiting) showUpdateNotice(registration.waiting);
+    watchWorker(registration, registration.installing);
+    registration.addEventListener("updatefound", () => watchWorker(registration, registration.installing));
+  };
+
+  const registerServiceWorker = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
+      watchRegistration(registration);
+    } catch (error) {
+      console.warn("Could not register the Jacks or Better service worker.", error);
+    }
+  };
+
+  if (el.reloadUpdate) {
+    el.reloadUpdate.addEventListener("click", () => {
+      if (!waitingWorker) return;
+      el.reloadUpdate.disabled = true;
+      el.reloadUpdate.textContent = "Reloading…";
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadingForUpdate) return;
+        reloadingForUpdate = true;
+        window.location.reload();
+      }, { once: true });
+      waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    });
+  }
+
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
-  });
+    if ("requestIdleCallback" in window) window.requestIdleCallback(registerServiceWorker, { timeout: 2500 });
+    else window.setTimeout(registerServiceWorker, 750);
+  }, { once: true });
 }

@@ -1,9 +1,10 @@
-const CACHE_NAME = "el-jefe-jacks-trainer-v29";
+"use strict";
+
+const CACHE_NAME = "el-jefe-jacks-trainer-v31";
 const APP_SHELL = [
-  "./",
   "./index.html",
-  "./styles.css?v=29",
-  "./app.js?v=29",
+  "./styles.css?v=31",
+  "./app.js?v=30",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
@@ -16,31 +17,48 @@ const APP_SHELL = [
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-    ))
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
+
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+function cacheResponse(request, response, cacheKey = request) {
+  if (!response || !response.ok) return response;
+  const copy = response.clone();
+  caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, copy)).catch(() => {});
+  return response;
+}
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      caches.match("./index.html").then(cached => {
+        const network = fetch(event.request)
+          .then(response => cacheResponse(event.request, response, "./index.html"))
+          .catch(() => null);
+        return cached || network;
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
-
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200) return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        return response;
-      });
+      return fetch(event.request)
+        .then(response => cacheResponse(event.request, response))
+        .catch(() => cached);
     })
   );
 });
