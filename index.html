@@ -24,7 +24,7 @@
 <link href="./manifest.webmanifest" rel="manifest"/>
 <link href="./favicon-64.png" rel="icon" type="image/png"/>
 <link href="./apple-touch-icon.png" rel="apple-touch-icon"/>
-<link href="./styles.css?v=29" rel="stylesheet"/>
+<link href="./styles.css?v=31" rel="stylesheet"/>
 </head>
 <body>
 <main class="app">
@@ -71,7 +71,7 @@
 </nav>
 <section class="panel play-panel" id="playPanel">
 <section class="play-game-card casino-table">
-<div class="table-wordmark"><span>CASA DEL JEFE</span><small>VIDEO POKER HALL</small></div>
+<div class="table-wordmark"><span>CASA DEL JEFE</span><small>JACKS OR BETTER 9/6</small></div>
 <div aria-label="Play statistics" class="play-topline">
 <div><small>Balance</small><strong id="playBalance">0 units</strong></div>
 <div class="play-accuracy-stat"><small>Accuracy</small><span class="play-accuracy-line"><strong id="playAccuracy">0.0%</strong><span aria-live="polite" class="play-decision-indicator" id="playDecisionIndicator"></span></span></div>
@@ -87,24 +87,24 @@
 <div aria-live="polite" class="feedback" id="playFeedback"></div>
 </section>
 <section aria-label="Running balance chart" class="balance-chart-card">
-<div class="balance-chart-heading">
-<span>Bankroll history</span>
-<small id="playChartSummary">0 completed hands</small>
-</div>
+<div class="balance-chart-heading"><span>BANKROLL HISTORY</span></div>
 <div aria-hidden="true" class="balance-chart-legend">
 <span><i class="legend-line legend-actual"></i>Your play</span>
 <span><i class="legend-line legend-optimal"></i>Optimal play</span>
 </div>
-<div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0 units</div>
+<div class="chart-delta-pill" id="playDeltaSummary">Optimal − you: 0</div>
 <canvas aria-label="Line chart comparing your Play balance with the balance from optimal play using the same cards" class="balance-chart" id="playBalanceChart" role="img"></canvas>
 </section>
 <section aria-label="Session review and controls" class="session-hub">
 <div class="session-hub-heading">
-<div>
-<strong>Session review</strong>
-<small>Review every incorrect hold from this session.</small>
-</div>
+<strong>SESSION REVIEW</strong>
 <button class="danger-link session-reset-button" id="resetBalance" type="button">Reset session</button>
+</div>
+<div aria-label="Session outcomes" class="session-stats">
+<div><small>Hands</small><strong id="playHands">0</strong></div>
+<div><small>Wins</small><strong id="playWins">0</strong></div>
+<div><small>Pushes</small><strong id="playPushes">0</strong></div>
+<div><small>Losses</small><strong id="playLosses">0</strong></div>
 </div>
 <details class="review-details session-review-list" id="playMissedDetails">
 <summary>Incorrect hands this session (<span id="playMissedCount">0</span>)</summary>
@@ -114,7 +114,7 @@
 </section>
 <section class="panel hidden train-panel" id="trainPanel">
 <section class="train-game-card casino-table">
-<div class="table-wordmark"><span>TRAINING ROOM</span><small>FIND THE BEST HOLD</small></div>
+<div class="table-wordmark"><span>CASA DEL JEFE</span><small>JACKS OR BETTER 9/6</small></div>
 <div aria-label="Training statistics" class="train-score" id="scorePanel"><div><small>Hands</small><strong id="score">0 / 0</strong></div><div><small>Accuracy</small><strong id="percentage">0.0%</strong></div></div>
 <p>Tap the cards you would keep, then check your answer.</p>
 <div aria-live="polite" class="made-hand" id="trainMadeHand"></div>

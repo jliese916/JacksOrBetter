@@ -1,4 +1,4 @@
-# Casa del Jefe — Video Poker Hall v29
+# Casa del Jefe — Video Poker Hall v31
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -8,6 +8,26 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Train** — practice optimal holds with immediate feedback and a persistent score.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
+
+## Version 31 changes
+
+- Standardizes **BANKROLL HISTORY** to the Three Card Poker v13 reference: full-width chart, gold optimal line, green/red player line drawn on top, no completed-hands badge, no in-chart delta, and a compact **Optimal − you** value above the graph.
+- Standardizes **SESSION REVIEW** with Hands, Wins, Pushes, and Losses while preserving existing sessions through bankroll-history migration.
+- Centers the accuracy percentage independently of the result indicator and optically centers the plus/minus marks inside their circles.
+- Changes the Play and Train table wordmarks to **Jacks or Better 9/6**.
+- Suppresses the visible **Small Pair** alert in Play, Train, and El Jefe Challenge without changing evaluation or strategy.
+- Uses explicit build-version handshakes so only genuinely newer workers show the update notice; the notice hides correctly after activation and Reload Now has a safe fallback.
+- Retains mobile chart scrolling and efficient ResizeObserver-based redraw behavior.
+- Service-worker cache: `el-jefe-jacks-trainer-v31`.
+
+## Version 30 changes
+
+- Allows vertical page scrolling when a touch gesture begins over the bankroll chart.
+- Consolidates chart redraws into a single animation frame and skips redundant canvas work.
+- Registers the service worker after the page becomes idle so startup remains responsive.
+- Installs updates quietly and shows a footer notice instead of interrupting an active hand.
+- Adds a user-controlled **Reload Now** button when a newer version is ready.
+- Service-worker cache: `el-jefe-jacks-trainer-v30`.
 
 ## Version 21 changes
 

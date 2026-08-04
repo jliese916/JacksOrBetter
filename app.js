@@ -1,5 +1,6 @@
 "use strict";
 
+const APP_VERSION = "31";
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
@@ -62,8 +63,11 @@ const el = {
   playAccuracy: document.querySelector("#playAccuracy"),
   playDecisionIndicator: document.querySelector("#playDecisionIndicator"),
   playBalanceChart: document.querySelector("#playBalanceChart"),
-  playChartSummary: document.querySelector("#playChartSummary"),
   playDeltaSummary: document.querySelector("#playDeltaSummary"),
+  playHands: document.querySelector("#playHands"),
+  playWins: document.querySelector("#playWins"),
+  playPushes: document.querySelector("#playPushes"),
+  playLosses: document.querySelector("#playLosses"),
   playMadeHand: document.querySelector("#playMadeHand"),
   playHand: document.querySelector("#playHand"),
   playSelection: document.querySelector("#playSelection"),
@@ -79,6 +83,39 @@ const el = {
 
 let balanceChartFrame = 0;
 let lastBalanceChartSignature = "";
+
+function countPlayOutcomesFromHistory() {
+  const storedHands = localStorage.getItem("jacksPlayHands");
+  const storedWins = localStorage.getItem("jacksPlayWins");
+  const storedPushes = localStorage.getItem("jacksPlayPushes");
+  const storedLosses = localStorage.getItem("jacksPlayLosses");
+  const stored = [storedHands, storedWins, storedPushes, storedLosses].map(Number);
+  if ([storedHands, storedWins, storedPushes, storedLosses].every(value => value !== null) && stored.every(Number.isFinite)) {
+    return { hands: stored[0], wins: stored[1], pushes: stored[2], losses: stored[3] };
+  }
+
+  let history = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
+    if (Array.isArray(saved)) history = saved.map(Number).filter(Number.isFinite);
+  } catch (error) {
+    console.warn("Could not migrate Jacks or Better session outcomes.", error);
+  }
+
+  const hands = Math.max(0, history.length - 1);
+  let wins = 0;
+  let pushes = 0;
+  let losses = 0;
+  for (let index = 1; index <= hands; index += 1) {
+    const change = history[index] - history[index - 1];
+    if (change > 1e-9) wins += 1;
+    else if (change < -1e-9) losses += 1;
+    else pushes += 1;
+  }
+  return { hands, wins, pushes, losses };
+}
+
+const migratedPlayOutcomes = countPlayOutcomesFromHistory();
 
 const state = {
   strategy: null,
@@ -97,6 +134,10 @@ const state = {
   playBalance: Number(localStorage.getItem("jacksPlayBalance") || 0),
   playAttempts: Number(localStorage.getItem("jacksPlayAttempts") || 0),
   playCorrect: Number(localStorage.getItem("jacksPlayCorrect") || 0),
+  playHands: migratedPlayOutcomes.hands,
+  playWins: migratedPlayOutcomes.wins,
+  playPushes: migratedPlayOutcomes.pushes,
+  playLosses: migratedPlayOutcomes.losses,
   playBalanceHistory: (() => {
     try {
       const saved = JSON.parse(localStorage.getItem("jacksPlayBalanceHistory") || "null");
@@ -212,7 +253,6 @@ function evaluateHand(hand) {
 function setMadeHand(element, hand) {
   const result = evaluateHand(hand);
   const displayedName = result.name === "Small Pair" ? "" : result.name;
-
   element.textContent = displayedName;
   element.classList.toggle("visible", Boolean(displayedName));
   element.classList.remove("small-pair");
@@ -298,6 +338,10 @@ function savePlaySession() {
   localStorage.setItem("jacksPlayBalance", state.playBalance);
   localStorage.setItem("jacksPlayAttempts", state.playAttempts);
   localStorage.setItem("jacksPlayCorrect", state.playCorrect);
+  localStorage.setItem("jacksPlayHands", state.playHands);
+  localStorage.setItem("jacksPlayWins", state.playWins);
+  localStorage.setItem("jacksPlayPushes", state.playPushes);
+  localStorage.setItem("jacksPlayLosses", state.playLosses);
   localStorage.setItem("jacksPlayBalanceHistory", JSON.stringify(state.playBalanceHistory));
   localStorage.setItem("jacksPlayOptimalBalance", state.playOptimalBalance);
   localStorage.setItem("jacksPlayOptimalBalanceHistory", JSON.stringify(state.playOptimalBalanceHistory));
@@ -326,11 +370,10 @@ function clearPlayDecisionIndicator() {
 }
 
 function flashPlayDecisionIndicator(wasCorrect) {
-  const symbol = wasCorrect ? "+" : "−";
   const resultClass = wasCorrect ? "correct" : "incorrect";
   const spokenText = wasCorrect ? "Optimal hold" : "Non-optimal hold";
 
-  el.playDecisionIndicator.textContent = symbol;
+  el.playDecisionIndicator.textContent = "";
   el.playDecisionIndicator.setAttribute("aria-label", spokenText);
 
   // Remove the animation classes first so repeated identical results pulse again.
@@ -887,8 +930,8 @@ function formatUnits(value) {
 
 function deltaLabel(value) {
   const rounded = Math.round(value * 10) / 10;
-  if (rounded === 0) return "0 units";
-  return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded)} ${Math.abs(rounded) === 1 ? "unit" : "units"}`;
+  if (rounded === 0) return "0";
+  return `${rounded > 0 ? "+" : "−"}${Math.abs(rounded)}`;
 }
 
 function togglePlayCard(card) {
@@ -998,14 +1041,20 @@ async function drawPlayHand() {
   state.playBalance += result.payout;
   if (optimalResult) state.playOptimalBalance += optimalResult.payout;
 
+  const completedHandNumber = state.playHands + 1;
+  state.playHands += 1;
+  const netResult = result.payout - WAGER;
+  if (netResult > 1e-9) state.playWins += 1;
+  else if (netResult < -1e-9) state.playLosses += 1;
+  else state.playPushes += 1;
+
   if (decisionWasCorrect !== null) {
-    const handNumber = state.playAttempts + 1;
     state.playAttempts += 1;
     if (decisionWasCorrect) {
       state.playCorrect += 1;
     } else {
       state.playMisses.push({
-        handNumber,
+        handNumber: completedHandNumber,
         hand: [...initialHand],
         userHold: playerHold,
         optimalHolds: optimalHolds.map(hold => [...hold].sort((a, b) => a - b))
@@ -1037,6 +1086,10 @@ function resetPlayBalance() {
   state.playOptimalBalance = 0;
   state.playAttempts = 0;
   state.playCorrect = 0;
+  state.playHands = 0;
+  state.playWins = 0;
+  state.playPushes = 0;
+  state.playLosses = 0;
   state.playBalanceHistory = [0];
   state.playOptimalBalanceHistory = [0];
   state.playMisses = [];
@@ -1072,183 +1125,111 @@ function drawBalanceChart() {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  const scale = window.devicePixelRatio || 1;
-  const width = Math.max(1, Math.round(rect.width * scale));
-  const height = Math.max(1, Math.round(rect.height * scale));
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(280, rect.width);
+  const height = Math.max(150, rect.height);
+  const pixelWidth = Math.round(width * dpr);
+  const pixelHeight = Math.round(height * dpr);
   const actualValues = state.playBalanceHistory.length ? state.playBalanceHistory : [0];
-  const optimalValues = state.playOptimalBalanceHistory.length
-    ? state.playOptimalBalanceHistory
-    : [0];
-  const signature = `${width}x${height}:${state.playAttempts}:${state.playBalance}:${state.playOptimalBalance}:${actualValues.length}:${optimalValues.length}`;
+  const optimalValues = state.playOptimalBalanceHistory.length ? state.playOptimalBalanceHistory : [0];
+  const signature = `${pixelWidth}x${pixelHeight}:${state.playAttempts}:${state.playBalance}:${state.playOptimalBalance}:${actualValues.length}:${optimalValues.length}`;
   if (signature === lastBalanceChartSignature) return;
   lastBalanceChartSignature = signature;
 
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-  }
+  if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+  if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
 
   const context = canvas.getContext("2d");
-  context.setTransform(scale, 0, 0, scale, 0, 0);
-  context.clearRect(0, 0, rect.width, rect.height);
+  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  context.clearRect(0, 0, width, height);
 
   const allValues = [...actualValues, ...optimalValues];
   const pointCount = Math.max(actualValues.length, optimalValues.length);
-  const padding = { left: 10, right: 84, top: 12, bottom: 14 };
-  const chartWidth = Math.max(1, rect.width - padding.left - padding.right);
-  const chartHeight = Math.max(1, rect.height - padding.top - padding.bottom);
+  const minimum = Math.min(0, ...allValues);
+  const maximum = Math.max(0, ...allValues);
+  const spread = Math.max(4, maximum - minimum);
+  const low = minimum - spread * 0.18;
+  const high = maximum + spread * 0.18;
+  const left = 40;
+  const right = 12;
+  const top = 12;
+  const bottom = 12;
+  const xFor = index => left + (pointCount === 1 ? 0 : index / (pointCount - 1) * (width - left - right));
+  const yFor = value => top + (high - value) / (high - low || 1) * (height - top - bottom);
 
-  let minimum = Math.min(0, ...allValues);
-  let maximum = Math.max(0, ...allValues);
-  if (minimum === maximum) {
-    minimum -= 5;
-    maximum += 5;
-  } else {
-    const extra = Math.max(1, (maximum - minimum) * 0.1);
-    minimum -= extra;
-    maximum += extra;
+  context.font = '11px system-ui, -apple-system, "Segoe UI", sans-serif';
+  context.fillStyle = "rgba(232,226,207,.72)";
+  context.strokeStyle = "rgba(232,226,207,.14)";
+  for (let index = 0; index <= 4; index += 1) {
+    const value = high - (high - low) * index / 4;
+    const y = yFor(value);
+    context.beginPath();
+    context.moveTo(left, y);
+    context.lineTo(width - right, y);
+    context.stroke();
+    context.fillText(String(Math.round(value)), 6, y + 4);
   }
 
-  const xFor = index => padding.left + (pointCount === 1 ? 0 : index * chartWidth / (pointCount - 1));
-  const yFor = value => padding.top + (maximum - value) * chartHeight / (maximum - minimum);
   const zeroY = yFor(0);
-
   context.save();
-  context.strokeStyle = "rgba(203, 191, 159, .45)";
-  context.lineWidth = 1;
+  context.strokeStyle = "rgba(231,200,106,.4)";
   context.setLineDash([5, 5]);
   context.beginPath();
-  context.moveTo(padding.left, zeroY);
-  context.lineTo(rect.width - padding.right, zeroY);
+  context.moveTo(left, zeroY);
+  context.lineTo(width - right, zeroY);
   context.stroke();
   context.restore();
 
   const buildPath = values => {
     context.beginPath();
     values.forEach((value, index) => {
-      const x = xFor(index);
-      const y = yFor(value);
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
+      if (index) context.lineTo(xFor(index), yFor(value));
+      else context.moveTo(xFor(index), yFor(value));
     });
   };
 
+  // Draw optimal first so Your play remains visible whenever the lines overlap.
+  if (optimalValues.length > 1) {
+    buildPath(optimalValues);
+    context.strokeStyle = "#e7c86a";
+    context.lineWidth = 2.25;
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    context.stroke();
+  }
+
   if (actualValues.length > 1) {
-    context.save();
-    context.beginPath();
-    context.rect(0, 0, rect.width, Math.max(0, zeroY));
-    context.clip();
-    buildPath(actualValues);
-    context.lineTo(xFor(actualValues.length - 1), zeroY);
-    context.lineTo(xFor(0), zeroY);
-    context.closePath();
-    context.fillStyle = "rgba(76, 207, 121, .13)";
-    context.fill();
-    context.restore();
-
-    context.save();
-    context.beginPath();
-    context.rect(0, zeroY, rect.width, Math.max(0, rect.height - zeroY));
-    context.clip();
-    buildPath(actualValues);
-    context.lineTo(xFor(actualValues.length - 1), zeroY);
-    context.lineTo(xFor(0), zeroY);
-    context.closePath();
-    context.fillStyle = "rgba(255, 107, 107, .11)";
-    context.fill();
-    context.restore();
-
-    const drawClippedLine = (top, bottom, color) => {
+    const drawClippedLine = (clipTop, clipBottom, color) => {
       context.save();
       context.beginPath();
-      context.rect(0, top, rect.width, Math.max(0, bottom - top));
+      context.rect(0, clipTop, width, Math.max(0, clipBottom - clipTop));
       context.clip();
       buildPath(actualValues);
       context.strokeStyle = color;
-      context.lineWidth = 2.5;
+      context.lineWidth = 3;
       context.lineJoin = "round";
       context.lineCap = "round";
       context.stroke();
       context.restore();
     };
-
     drawClippedLine(0, zeroY, "#4ccf79");
-    drawClippedLine(zeroY, rect.height, "#ff6b6b");
-  } else {
-    context.fillStyle = "#e7c86a";
-    context.beginPath();
-    context.arc(xFor(0), yFor(actualValues[0]), 3, 0, Math.PI * 2);
-    context.fill();
-  }
-
-  if (optimalValues.length > 1) {
-    context.save();
-    buildPath(optimalValues);
-    context.strokeStyle = "#e7c86a";
-    context.lineWidth = 2;
-    context.lineJoin = "round";
-    context.lineCap = "round";
-    context.stroke();
-    context.restore();
+    drawClippedLine(zeroY, height, "#ff6b6b");
   }
 
   const actualLast = actualValues[actualValues.length - 1];
-  context.fillStyle = actualLast >= 0 ? "#4ccf79" : "#ff6b6b";
-  context.beginPath();
-  context.arc(xFor(actualValues.length - 1), yFor(actualLast), 3.5, 0, Math.PI * 2);
-  context.fill();
-
   const optimalLast = optimalValues[optimalValues.length - 1];
   context.fillStyle = "#e7c86a";
   context.beginPath();
-  context.arc(xFor(optimalValues.length - 1), yFor(optimalLast), 3, 0, Math.PI * 2);
+  context.arc(xFor(optimalValues.length - 1), yFor(optimalLast), 3.5, 0, Math.PI * 2);
   context.fill();
-
-  // Show the current counterfactual difference between optimal play and the player.
-  const delta = optimalLast - actualLast;
-  const latestX = xFor(pointCount - 1);
-  const actualY = yFor(actualLast);
-  const optimalY = yFor(optimalLast);
-  const topY = Math.min(actualY, optimalY);
-  const bottomY = Math.max(actualY, optimalY);
-  const bracketX = latestX + 12;
-  const labelX = bracketX + 7;
-  const labelY = Math.min(rect.height - 11, Math.max(11, (topY + bottomY) / 2));
-  const deltaLabel = delta === 0
-    ? "0 units"
-    : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} ${Math.abs(delta) === 1 ? "unit" : "units"}`;
-
-  context.save();
-  context.strokeStyle = "rgba(231, 200, 106, .78)";
-  context.fillStyle = "#f8f1df";
-  context.lineWidth = 1.4;
-  context.lineCap = "round";
-
-  if (Math.abs(actualY - optimalY) < 2.5) {
-    context.beginPath();
-    context.moveTo(bracketX - 4, actualY);
-    context.lineTo(bracketX + 4, actualY);
-    context.stroke();
-  } else {
-    context.beginPath();
-    context.moveTo(bracketX, topY);
-    context.lineTo(bracketX, bottomY);
-    context.moveTo(bracketX - 4, topY);
-    context.lineTo(bracketX + 4, topY);
-    context.moveTo(bracketX - 4, bottomY);
-    context.lineTo(bracketX + 4, bottomY);
-    context.stroke();
-  }
-
-  context.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
-  context.textAlign = "left";
-  context.textBaseline = "middle";
-  context.fillText(deltaLabel, labelX, labelY);
-  context.restore();
+  context.fillStyle = actualLast >= 0 ? "#4ccf79" : "#ff6b6b";
+  context.beginPath();
+  context.arc(xFor(actualValues.length - 1), yFor(actualLast), 4, 0, Math.PI * 2);
+  context.fill();
 
   canvas.setAttribute(
     "aria-label",
-    `Line chart comparing your Play balance with optimal play. Current optimal-minus-you difference: ${deltaLabel}.`
+    `Line chart comparing your bankroll with optimal play. Current optimal-minus-you difference: ${deltaLabel(optimalLast - actualLast)}.`
   );
 }
 
@@ -1309,11 +1290,14 @@ function renderPlay() {
   const playAccuracy = state.playAttempts ? 100 * state.playCorrect / state.playAttempts : 0;
   el.playAccuracy.textContent = playAccuracy.toFixed(1) + "%";
   renderPlayMissedHands();
-  el.playChartSummary.textContent = `${state.playAttempts} completed ${state.playAttempts === 1 ? "hand" : "hands"}`;
+  el.playHands.textContent = String(state.playHands);
+  el.playWins.textContent = String(state.playWins);
+  el.playPushes.textContent = String(state.playPushes);
+  el.playLosses.textContent = String(state.playLosses);
   const delta = Math.round((state.playOptimalBalance - state.playBalance) * 10) / 10;
   el.playDeltaSummary.textContent = `Optimal − you: ${deltaLabel(delta)}`;
-  el.playDeltaSummary.classList.toggle("ahead", delta > 0);
-  el.playDeltaSummary.classList.toggle("behind", delta < 0);
+  el.playDeltaSummary.classList.toggle("behind", delta > 0);
+  el.playDeltaSummary.classList.toggle("ahead", delta < 0);
   scheduleBalanceChartDraw();
 
   el.playHand.replaceChildren();
@@ -1419,13 +1403,68 @@ loadURL().catch(error => {
   status("Strategy data could not be loaded. Reload the app or verify that JacksOrBetterStrategy.json is installed.", "error");
 });
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
   let waitingWorker = null;
+  let waitingRegistration = null;
   let reloadingForUpdate = false;
 
-  const showUpdateNotice = worker => {
-    if (!worker || !navigator.serviceWorker.controller || !el.updateNotice) return;
+  const hideUpdateNotice = () => {
+    waitingWorker = null;
+    waitingRegistration = null;
+    if (el.updateNotice) el.updateNotice.classList.add("hidden");
+    if (el.reloadUpdate) {
+      el.reloadUpdate.disabled = false;
+      el.reloadUpdate.textContent = "Reload Now";
+    }
+  };
+
+  const workerVersion = worker => new Promise(resolve => {
+    if (!worker) {
+      resolve(null);
+      return;
+    }
+    const channel = new MessageChannel();
+    let settled = false;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(value ? String(value) : null);
+    };
+    const timer = window.setTimeout(() => finish(null), 1200);
+    channel.port1.onmessage = event => finish(event.data && event.data.version);
+    try {
+      worker.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+    } catch {
+      finish(null);
+    }
+  });
+
+  const numericVersion = value => {
+    const parsed = Number.parseInt(String(value || "").replace(/\D+/g, ""), 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const considerWaitingWorker = async (registration, worker) => {
+    if (!worker || worker.state !== "installed") return;
+    const version = await workerVersion(worker);
+    const pageVersion = numericVersion(APP_VERSION);
+    const candidateVersion = numericVersion(version);
+
+    if (candidateVersion === pageVersion) {
+      hideUpdateNotice();
+      worker.postMessage({ type: "SKIP_WAITING" });
+      return;
+    }
+
+    if (candidateVersion === null || (pageVersion !== null && candidateVersion < pageVersion)) {
+      hideUpdateNotice();
+      return;
+    }
+
+    if (!navigator.serviceWorker.controller || !el.updateNotice) return;
     waitingWorker = worker;
+    waitingRegistration = registration;
     el.updateNotice.classList.remove("hidden");
   };
 
@@ -1434,22 +1473,23 @@ if ("serviceWorker" in navigator) {
     if (!worker || watchedWorkers.has(worker)) return;
     watchedWorkers.add(worker);
     const checkState = () => {
-      if (worker.state === "installed") showUpdateNotice(registration.waiting || worker);
+      if (worker.state === "installed") considerWaitingWorker(registration, registration.waiting || worker);
     };
     worker.addEventListener("statechange", checkState);
     checkState();
   };
 
   const watchRegistration = registration => {
-    if (registration.waiting) showUpdateNotice(registration.waiting);
+    if (registration.waiting) considerWaitingWorker(registration, registration.waiting);
     watchWorker(registration, registration.installing);
     registration.addEventListener("updatefound", () => watchWorker(registration, registration.installing));
   };
 
   const registerServiceWorker = async () => {
     try {
-      const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
+      const registration = await navigator.serviceWorker.register(`./service-worker.js?v=${APP_VERSION}`, { updateViaCache: "none" });
       watchRegistration(registration);
+      registration.update().catch(() => {});
     } catch (error) {
       console.warn("Could not register the Jacks or Better service worker.", error);
     }
@@ -1457,15 +1497,33 @@ if ("serviceWorker" in navigator) {
 
   if (el.reloadUpdate) {
     el.reloadUpdate.addEventListener("click", () => {
-      if (!waitingWorker) return;
+      const worker = (waitingRegistration && waitingRegistration.waiting) || waitingWorker;
       el.reloadUpdate.disabled = true;
       el.reloadUpdate.textContent = "Reloading…";
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
+
+      if (!worker) {
+        window.location.reload();
+        return;
+      }
+
+      const reloadOnce = () => {
         if (reloadingForUpdate) return;
         reloadingForUpdate = true;
         window.location.reload();
-      }, { once: true });
-      waitingWorker.postMessage({ type: "SKIP_WAITING" });
+      };
+
+      navigator.serviceWorker.addEventListener("controllerchange", reloadOnce, { once: true });
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "activated") reloadOnce();
+      });
+
+      try {
+        worker.postMessage({ type: "SKIP_WAITING" });
+      } catch {
+        reloadOnce();
+        return;
+      }
+      window.setTimeout(reloadOnce, 2500);
     });
   }
 

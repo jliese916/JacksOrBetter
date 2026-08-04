@@ -1,10 +1,11 @@
 "use strict";
 
+const BUILD_VERSION = "31";
 const CACHE_NAME = "el-jefe-jacks-trainer-v31";
 const APP_SHELL = [
   "./index.html",
   "./styles.css?v=31",
-  "./app.js?v=30",
+  "./app.js?v=31",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
@@ -28,7 +29,13 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("message", event => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  const data = event.data || {};
+  if (data.type === "GET_VERSION") {
+    const port = event.ports && event.ports[0];
+    if (port) port.postMessage({ version: BUILD_VERSION });
+    return;
+  }
+  if (data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 function cacheResponse(request, response, cacheKey = request) {
