@@ -929,3 +929,92 @@ html{scrollbar-gutter:stable}
 .session-review-list{margin-top:11px!important}
 @media(max-width:430px){.session-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:360px){.session-hub-heading{display:grid}.session-reset-button{justify-self:start}}
+
+/* Version 32: Training Room masthead and decision-ladder feedback */
+.training-room-wordmark{margin-bottom:8px!important}
+.training-room-wordmark span{
+  font-size:1.05rem;
+  line-height:1.1;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.train-review-hub{margin-top:14px}
+.train-review-hub .session-hub-heading{justify-content:center}
+.train-decision-result{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:8px;
+  font-size:1rem;
+}
+.decision-status-icon{
+  display:inline-grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  flex:0 0 24px;
+  border-radius:50%;
+  font-size:1rem;
+  font-weight:950;
+  line-height:1;
+}
+.decision-status-icon.correct{background:rgba(38,166,91,.18);color:#56d58a;border:1px solid rgba(86,213,138,.55)}
+.decision-status-icon.incorrect{background:rgba(218,72,72,.15);color:#ff8d8d;border:1px solid rgba(255,141,141,.55)}
+.decision-why-details{
+  overflow:hidden;
+  margin-top:9px;
+  border:1px solid rgba(216,181,100,.34);
+  border-radius:12px;
+  background:rgba(2,20,14,.34);
+  color:#f8f1df;
+  text-align:left;
+}
+.missed-hand-card .decision-why-details{
+  border-color:rgba(201,162,58,.34);
+  background:#0b2118;
+}
+.decision-why-details>summary{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:8px;
+  min-height:44px;
+  padding:9px 11px;
+  color:#f8f1df;
+  font-size:.84rem;
+  font-weight:850;
+  cursor:pointer;
+  list-style:none;
+}
+.decision-why-details>summary::-webkit-details-marker{display:none}
+.decision-arrow{color:#e7c86a;font-size:1rem;transition:transform .15s ease}
+.decision-why-details[open] .decision-arrow{transform:rotate(180deg)}
+.decision-why-body{
+  display:grid;
+  gap:6px;
+  padding:11px 12px 12px;
+  border-top:1px solid rgba(216,181,100,.25);
+  color:#d8e6dc;
+  font-size:.86rem;
+  line-height:1.45;
+}
+.decision-why-body strong{color:#f8f1df;font-size:.94rem}
+.decision-why-body p{margin:0!important;color:#d8e6dc!important}
+.decision-ladder-reference{
+  color:#e7c86a;
+  font-size:.69rem;
+  font-weight:900;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.decision-exception{
+  padding:8px 9px;
+  border-left:3px solid #c9a23a;
+  border-radius:0 8px 8px 0;
+  background:rgba(201,162,58,.11);
+}
+@media(max-width:430px){
+  .training-room-wordmark span{font-size:.96rem}
+  .decision-why-details>summary{font-size:.79rem}
+}

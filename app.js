@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "31";
+const APP_VERSION = "32";
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
@@ -77,6 +77,9 @@ const el = {
   playMissedCount: document.querySelector("#playMissedCount"),
   playMissedList: document.querySelector("#playMissedList"),
   playFeedback: document.querySelector("#playFeedback"),
+  trainMissedDetails: document.querySelector("#trainMissedDetails"),
+  trainMissedCount: document.querySelector("#trainMissedCount"),
+  trainMissedList: document.querySelector("#trainMissedList"),
   updateNotice: document.querySelector("#updateNotice"),
   reloadUpdate: document.querySelector("#reloadUpdate")
 };
@@ -126,6 +129,15 @@ const state = {
   answered: false,
   attempts: Number(localStorage.getItem("jacksAttempts") || 0),
   correct: Number(localStorage.getItem("jacksCorrect") || 0),
+  trainMisses: (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jacksTrainMisses") || "[]");
+      if (Array.isArray(saved)) return saved;
+    } catch (error) {
+      console.warn("Could not read saved Train missed hands.", error);
+    }
+    return [];
+  })(),
 
   lookupHand: [],
   pendingRank: null,
@@ -327,11 +339,13 @@ function renderTraining() {
   el.score.textContent = `${state.correct} / ${state.attempts}`;
   el.percentage.textContent = percentage.toFixed(1) + "%";
   el.check.disabled = !state.strategy || state.answered;
+  renderTrainMissedHands();
 }
 
 function saveTrainingScore() {
   localStorage.setItem("jacksAttempts", state.attempts);
   localStorage.setItem("jacksCorrect", state.correct);
+  localStorage.setItem("jacksTrainMisses", JSON.stringify(state.trainMisses));
 }
 
 function savePlaySession() {
@@ -438,6 +452,295 @@ function describeForHand(set, hand) {
   return cards.length ? cards.map(label).join(" ") : "discard all five cards";
 }
 
+const STRAIGHT_RANK_SETS = [
+  new Set([12, 0, 1, 2, 3]),
+  ...Array.from({ length: 9 }, (_, start) => new Set([start, start + 1, start + 2, start + 3, start + 4]))
+];
+
+function sortedRanks(cards) {
+  return cards.map(rank).sort((a, b) => a - b);
+}
+
+function rankKey(cards) {
+  return [...new Set(sortedRanks(cards))].join(",");
+}
+
+function cardsShareSuit(cards) {
+  return cards.length > 0 && cards.every(card => suit(card) === suit(cards[0]));
+}
+
+function isFourToRoyal(cards) {
+  return cards.length === 4 && cardsShareSuit(cards) && cards.every(card => rank(card) >= 8);
+}
+
+function isThreeToRoyal(cards) {
+  return cards.length === 3 && cardsShareSuit(cards) && cards.every(card => rank(card) >= 8);
+}
+
+function fitsStraight(cards) {
+  const ranks = new Set(cards.map(rank));
+  return STRAIGHT_RANK_SETS.some(straight => [...ranks].every(value => straight.has(value)));
+}
+
+function isFourToStraightFlush(cards) {
+  return cards.length === 4 && cardsShareSuit(cards) && fitsStraight(cards);
+}
+
+function isOpenEndedStraight(cards) {
+  if (cards.length !== 4) return false;
+  const ranks = [...new Set(cards.map(rank))].sort((a, b) => a - b);
+  if (ranks.length !== 4) return false;
+  return ranks[3] - ranks[0] === 3 && ranks[0] <= 8;
+}
+
+function threeStraightFlushScore(cards) {
+  if (cards.length !== 3 || !cardsShareSuit(cards) || isThreeToRoyal(cards)) return null;
+  const ranks = new Set(cards.map(rank));
+  const highCards = cards.filter(card => rank(card) >= 9).length;
+  const straightCount = STRAIGHT_RANK_SETS.filter(straight => [...ranks].every(value => straight.has(value))).length;
+  return { score: highCards + straightCount, highCards, straightCount };
+}
+
+function containsSuitedRanks(hand, ranksWanted) {
+  return [0, 1, 2, 3].some(suitValue => ranksWanted.every(rankValue =>
+    hand.some(card => suit(card) === suitValue && rank(card) === rankValue)
+  ));
+}
+
+function madeHandExplanation(name) {
+  const rules = {
+    "Royal Flush": "Hold all five cards.",
+    "Straight Flush": "Hold all five cards.",
+    "Four of a Kind": "Hold the four matching cards. Keeping the kicker is equivalent, but drawing one is standard.",
+    "Full House": "Hold all five cards.",
+    "Three of a Kind": "Hold the three matching cards and discard both kickers.",
+    "Two Pair": "Hold both pairs and discard the fifth card.",
+    "Straight": "Hold all five cards unless the hand also contains four to a royal flush.",
+    "Flush": "Hold all five cards unless the hand also contains four to a royal flush.",
+    "Jacks or Better": "Hold the high pair unless an earlier four-card royal or straight-flush draw applies."
+  };
+  return {
+    reference: `Complete Decision Ladder → Checkpoint 1: Made hands`,
+    title: name,
+    rule: rules[name] || "Keep the made hand."
+  };
+}
+
+function ladderExplanation(hand, optimalHolds) {
+  const holdSet = optimalHolds[0] || new Set();
+  const held = hand.filter(card => holdSet.has(card));
+  const handResult = evaluateHand(hand).name;
+  const handRanks = sortedRanks(hand).join(",");
+  const heldRanks = sortedRanks(held).join(",");
+  const explanation = (number, title, rule, exception = "") => ({
+    reference: `Complete Decision Ladder → #${number}`,
+    title,
+    rule,
+    exception
+  });
+
+  if (["Royal Flush", "Straight Flush", "Four of a Kind", "Full House", "Three of a Kind", "Two Pair"].includes(handResult)) {
+    return madeHandExplanation(handResult);
+  }
+
+  if (["Straight", "Flush", "Jacks or Better"].includes(handResult)) {
+    if (isFourToRoyal(held)) {
+      return explanation(1, "Four to a royal flush", "Keep the four suited royal cards.", handResult === "Jacks or Better" ? "This is the listed exception to holding the high pair." : `This is the listed exception to holding the made ${handResult.toLowerCase()}.`);
+    }
+    if (handResult === "Jacks or Better" && isFourToStraightFlush(held)) {
+      return explanation(2, "Four to a straight flush", "Keep the four suited cards that can complete a straight flush.", "This is the listed exception to holding a high pair.");
+    }
+    return madeHandExplanation(handResult);
+  }
+
+  if (isFourToRoyal(held)) return explanation(1, "Four to a royal flush", "Keep the four suited royal cards.");
+  if (isFourToStraightFlush(held)) return explanation(2, "Four to a straight flush", "Keep the four suited cards that can complete a straight flush.");
+  if (isThreeToRoyal(held)) return explanation(3, "Three to a royal flush", "Keep the three suited royal cards.");
+
+  if (held.length === 4 && cardsShareSuit(held)) {
+    const hasThreeRoyal = [0, 1, 2, 3].some(suitValue =>
+      hand.filter(card => suit(card) === suitValue && rank(card) >= 8).length >= 3
+    );
+    return explanation(4, "Four to a flush", "Keep the four cards of the same suit.", hasThreeRoyal ? "This hand uses the Ladder #3 switch to #4 rather than holding only three royal cards." : "");
+  }
+
+  if (handRanks === "8,8,9,10,11" && heldRanks === "8,9,10,11") {
+    return explanation(5, "T-T-J-Q-K exception", "With exactly T-T-J-Q-K, discard either ten and hold T-J-Q-K.", "This is the only open-ended-straight draw that outranks a low pair.");
+  }
+
+  if (held.length === 2 && rank(held[0]) === rank(held[1]) && rank(held[0]) <= 8) {
+    return explanation(6, "Low pair", "Hold the pair of tens or lower.", "Break a low pair only for an earlier ladder holding, including the specific T-T-J-Q-K exception at #5.");
+  }
+
+  if (isOpenEndedStraight(held)) return explanation(7, "Four-card open-ended straight", "Keep the four consecutive ranks that can complete a straight at either end.");
+
+  const sf = threeStraightFlushScore(held);
+  if (sf && sf.score >= 3) return explanation(8, "3SF score 3 or higher", `Keep the three suited cards. Their 3SF score is ${sf.highCards} high card${sf.highCards === 1 ? "" : "s"} + ${sf.straightCount} possible straight${sf.straightCount === 1 ? "" : "s"} = ${sf.score}.`);
+
+  if (held.length === 2 && cardsShareSuit(held) && rankKey(held) === "9,10") {
+    return explanation(9, "J-Q suited", "Keep the suited jack and queen.");
+  }
+
+  if (rankKey(held) === "9,10,11,12" && held.length === 4) {
+    const switchUsed = containsSuitedRanks(hand, [9, 10]);
+    return explanation(10, "J-Q-K-A", "Keep J-Q-K-A as a four-card inside straight with four high cards.", switchUsed ? "This hand uses the Ladder #9 switch to #10 instead of holding J-Q suited." : "");
+  }
+
+  if (held.length === 2 && cardsShareSuit(held) && held.every(card => rank(card) >= 9) && rankKey(held) !== "9,10") {
+    return explanation(11, "Two suited high cards", "Keep the two suited high cards. J-Q suited is handled earlier at #9.");
+  }
+
+  if (sf && sf.score === 2 && (sf.highCards === 0 || held.some(card => [9, 12].includes(rank(card))))) {
+    return explanation(12, "3SF score 2 with A, J, or no high card", `Keep the three suited cards. Their 3SF score is ${sf.highCards} high card${sf.highCards === 1 ? "" : "s"} + ${sf.straightCount} possible straight${sf.straightCount === 1 ? "" : "s"} = 2.`);
+  }
+
+  if (held.length === 4 && ["7,9,10,11", "8,9,10,12", "8,9,11,12"].includes(rankKey(held))) {
+    return explanation(13, "Selected four-card inside straight", "Keep the listed inside-straight rank set: 9-J-Q-K, T-J-Q-A, or T-J-K-A.");
+  }
+
+  if (sf && sf.score === 2 && held.some(card => rank(card) === 10)) {
+    return explanation(14, "3SF score 2 with Q", "Keep the three suited cards. This group is 8-9-Q suited or 8-T-Q suited.");
+  }
+
+  if (held.length === 3 && rankKey(held) === "9,10,11") return explanation(15, "J-Q-K", "Keep the three high cards J-Q-K.");
+
+  if (held.length === 2 && !cardsShareSuit(held) && rankKey(held) === "9,10") return explanation(16, "J-Q unsuited", "Keep the jack and queen.");
+
+  if (held.length === 4 && rankKey(held) === "8,10,11,12") return explanation(17, "T-Q-K-A", "Keep T-Q-K-A as a four-card inside straight.");
+
+  if (sf && sf.score === 2 && held.some(card => rank(card) === 11)) return explanation(18, "3SF score 2 with K", "Keep 9-T-K suited.");
+
+  if (held.length === 2 && cardsShareSuit(held) && rankKey(held) === "8,9") return explanation(19, "T-J suited", "Keep the suited ten and jack.");
+
+  if (held.length === 2 && !cardsShareSuit(held) && ["9,11", "10,11"].includes(rankKey(held))) {
+    const switchUsed = containsSuitedRanks(hand, [8, 9]);
+    return explanation(20, "J-K or Q-K unsuited", "Keep J-K or Q-K.", switchUsed ? "This hand uses the Ladder #19 switch to #20 instead of holding T-J suited." : "");
+  }
+
+  if (held.length === 2 && cardsShareSuit(held) && rankKey(held) === "8,10") return explanation(21, "T-Q suited", "Keep the suited ten and queen.");
+
+  if (held.length === 2 && !cardsShareSuit(held) && ["9,12", "10,12", "11,12"].includes(rankKey(held))) {
+    const switchUsed = containsSuitedRanks(hand, [8, 10]);
+    return explanation(22, "Two unsuited high cards with an ace", "Keep J-A, Q-A, or K-A.", switchUsed ? "This hand uses the Ladder #21 switch to #22 instead of holding T-Q suited." : "");
+  }
+
+  if (held.length === 2 && cardsShareSuit(held) && rankKey(held) === "8,11") return explanation(23, "T-K suited", "Keep the suited ten and king.");
+
+  if (held.length === 1 && rank(held[0]) >= 9) {
+    const switchUsed = containsSuitedRanks(hand, [8, 11]);
+    return explanation(24, "One high card", "Keep the single jack, queen, king, or ace.", switchUsed ? "This hand uses the Ladder #23 switch to #24 instead of holding T-K suited." : "");
+  }
+
+  if (sf && sf.score === 1) return explanation(25, "3SF score 1", "Keep the three suited low cards when they fit exactly one possible straight.");
+
+  if (held.length === 0) return explanation(26, "None of the above", "Discard all five cards and draw five new cards.");
+
+  return {
+    reference: "Complete Decision Ladder",
+    title: "Optimal table lookup",
+    rule: "Hold the cards shown by the optimal strategy lookup."
+  };
+}
+
+function makeDecisionDetails(hand, optimalHolds, { open = false } = {}) {
+  const info = ladderExplanation(hand, optimalHolds);
+  const details = document.createElement("details");
+  details.className = "decision-why-details";
+  details.open = open;
+
+  const summary = document.createElement("summary");
+  summary.innerHTML = '<span class="decision-status-icon incorrect">×</span><span>Why this missed optimal strategy</span><span class="decision-arrow" aria-hidden="true">⌄</span>';
+
+  const body = document.createElement("div");
+  body.className = "decision-why-body";
+  const reference = document.createElement("div");
+  reference.className = "decision-ladder-reference";
+  reference.textContent = info.reference;
+  const title = document.createElement("strong");
+  title.textContent = info.title;
+  const rule = document.createElement("p");
+  rule.textContent = info.rule;
+  body.append(reference, title, rule);
+  if (info.exception) {
+    const exception = document.createElement("p");
+    exception.className = "decision-exception";
+    exception.textContent = info.exception;
+    body.append(exception);
+  }
+  details.append(summary, body);
+  return details;
+}
+
+function buildMissedHandCard(miss, heading) {
+  const item = document.createElement("article");
+  item.className = "missed-hand-card play-missed-card";
+
+  const number = document.createElement("div");
+  number.className = "missed-hand-number";
+  number.textContent = heading;
+
+  const hand = document.createElement("div");
+  hand.className = "mini-hand challenge-review-hand";
+  miss.hand.forEach(card => hand.append(miniCard(card)));
+
+  const decisions = document.createElement("div");
+  decisions.className = "missed-hold-grid";
+
+  const yourDecision = document.createElement("div");
+  yourDecision.className = "missed-hold-row";
+  yourDecision.innerHTML = '<span>Your hold</span>';
+  const yourValue = document.createElement("strong");
+  yourValue.className = "incorrect-decision";
+  yourValue.textContent = describeStoredHold(miss.userHold);
+  yourDecision.append(yourValue);
+
+  const correctDecision = document.createElement("div");
+  correctDecision.className = "missed-hold-row";
+  correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
+  const correctValue = document.createElement("strong");
+  correctValue.className = "correct-decision";
+  correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
+  correctDecision.append(correctValue);
+
+  const holdSets = miss.optimalHolds.map(cards => new Set(cards));
+  decisions.append(yourDecision, correctDecision, makeDecisionDetails(miss.hand, holdSets));
+  item.append(number, hand, decisions);
+  return item;
+}
+
+function renderTrainMissedHands() {
+  if (!el.trainMissedCount || !el.trainMissedList) return;
+  el.trainMissedCount.textContent = String(state.trainMisses.length);
+  el.trainMissedList.replaceChildren();
+
+  if (!state.trainMisses.length) {
+    const empty = document.createElement("p");
+    empty.className = "play-missed-empty";
+    empty.textContent = "No training mistakes yet.";
+    el.trainMissedList.append(empty);
+    return;
+  }
+
+  state.trainMisses.forEach(miss => {
+    el.trainMissedList.append(buildMissedHandCard(miss, `Training hand ${miss.handNumber}`));
+  });
+}
+
+function renderTrainDecisionFeedback(correct, hand, optimalHolds) {
+  el.feedback.replaceChildren();
+  el.feedback.className = `feedback ${correct ? "correct" : "incorrect"}`;
+
+  const result = document.createElement("div");
+  result.className = "train-decision-result";
+  result.innerHTML = correct
+    ? '<span class="decision-status-icon correct">✓</span><strong>Correct</strong>'
+    : '<span class="decision-status-icon incorrect">×</span><strong>Incorrect</strong>';
+  el.feedback.append(result);
+
+  if (!correct) el.feedback.append(makeDecisionDetails(hand, optimalHolds, { open: true }));
+}
+
+
 function check() {
   try {
     const holds = optimal(state.hand);
@@ -447,12 +750,16 @@ function check() {
 
     if (correct) {
       state.correct += 1;
-      feedback("Correct!", "correct");
     } else {
-      const descriptions = [...new Set(holds.map(hold => describeForHand(hold, state.hand)))];
-      feedback((descriptions.length === 1 ? "Optimal play: " : "Optimal plays: ") + descriptions.join(" or "), "incorrect");
+      state.trainMisses.push({
+        handNumber: state.attempts,
+        hand: [...state.hand],
+        userHold: [...state.selected].sort((a, b) => a - b),
+        optimalHolds: holds.map(hold => [...hold].sort((a, b) => a - b))
+      });
     }
 
+    renderTrainDecisionFeedback(correct, state.hand, holds);
     saveTrainingScore();
     renderTraining();
   } catch (error) {
@@ -626,7 +933,7 @@ function renderChallengeCertificate() {
   const reviewLink = document.createElement("button");
   reviewLink.type = "button";
   reviewLink.className = "challenge-review-link";
-  reviewLink.textContent = `See missed hands (${state.challengeMisses.length})`;
+  reviewLink.textContent = `Review mistakes (${state.challengeMisses.length})`;
   reviewLink.onclick = showChallengeReview;
   el.challengeSummary.append(reviewLink);
 
@@ -661,7 +968,7 @@ function renderChallengeReview() {
   const headingRow = document.createElement("div");
   headingRow.className = "challenge-review-heading";
   const headingText = document.createElement("div");
-  headingText.innerHTML = `<div class="challenge-kicker">EL JEFE CHALLENGE</div><h2>Missed hands</h2>`;
+  headingText.innerHTML = `<div class="challenge-kicker">EL JEFE CHALLENGE</div><h2>Review mistakes</h2>`;
   const back = document.createElement("button");
   back.type = "button";
   back.className = "challenge-exit";
@@ -676,7 +983,7 @@ function renderChallengeReview() {
   const intro = document.createElement("p");
   intro.className = "challenge-review-intro";
   intro.textContent = state.challengeMisses.length
-    ? `${state.challengeMisses.length} hand${state.challengeMisses.length === 1 ? "" : "s"} to review.`
+    ? `${state.challengeMisses.length} hand${state.challengeMisses.length === 1 ? "" : "s"} to review. Open any explanation to see the matching ladder rule.`
     : "Perfect challenge. There were no missed hands.";
   el.challengeReview.append(intro);
 
@@ -684,43 +991,9 @@ function renderChallengeReview() {
 
   const list = document.createElement("div");
   list.className = "missed-hand-list";
-
-  state.challengeMisses.forEach((miss) => {
-    const item = document.createElement("article");
-    item.className = "missed-hand-card";
-
-    const number = document.createElement("div");
-    number.className = "missed-hand-number";
-    number.textContent = `Hand ${miss.handNumber}`;
-
-    const hand = document.createElement("div");
-    hand.className = "mini-hand challenge-review-hand";
-    miss.hand.forEach(card => hand.append(miniCard(card)));
-
-    const decisions = document.createElement("div");
-    decisions.className = "missed-hold-grid";
-
-    const yourDecision = document.createElement("div");
-    yourDecision.className = "missed-hold-row";
-    yourDecision.innerHTML = '<span>Your hold</span>';
-    const yourValue = document.createElement("strong");
-    yourValue.className = "incorrect-decision";
-    yourValue.textContent = describeStoredHold(miss.userHold);
-    yourDecision.append(yourValue);
-
-    const correctDecision = document.createElement("div");
-    correctDecision.className = "missed-hold-row";
-    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
-    const correctValue = document.createElement("strong");
-    correctValue.className = "correct-decision";
-    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
-    correctDecision.append(correctValue);
-
-    decisions.append(yourDecision, correctDecision);
-    item.append(number, hand, decisions);
-    list.append(item);
+  state.challengeMisses.forEach(miss => {
+    list.append(buildMissedHandCard(miss, `Hand ${miss.handNumber}`));
   });
-
   el.challengeReview.append(list);
 }
 
@@ -1246,39 +1519,7 @@ function renderPlayMissedHands() {
   }
 
   state.playMisses.forEach(miss => {
-    const item = document.createElement("article");
-    item.className = "missed-hand-card play-missed-card";
-
-    const number = document.createElement("div");
-    number.className = "missed-hand-number";
-    number.textContent = `Hand ${miss.handNumber}`;
-
-    const hand = document.createElement("div");
-    hand.className = "mini-hand challenge-review-hand";
-    miss.hand.forEach(card => hand.append(miniCard(card)));
-
-    const decisions = document.createElement("div");
-    decisions.className = "missed-hold-grid";
-
-    const yourDecision = document.createElement("div");
-    yourDecision.className = "missed-hold-row";
-    yourDecision.innerHTML = "<span>Your hold</span>";
-    const yourValue = document.createElement("strong");
-    yourValue.className = "incorrect-decision";
-    yourValue.textContent = describeStoredHold(miss.userHold);
-    yourDecision.append(yourValue);
-
-    const correctDecision = document.createElement("div");
-    correctDecision.className = "missed-hold-row";
-    correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
-    const correctValue = document.createElement("strong");
-    correctValue.className = "correct-decision";
-    correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
-    correctDecision.append(correctValue);
-
-    decisions.append(yourDecision, correctDecision);
-    item.append(number, hand, decisions);
-    el.playMissedList.append(item);
+    el.playMissedList.append(buildMissedHandCard(miss, `Hand ${miss.handNumber}`));
   });
 }
 
@@ -1374,6 +1615,7 @@ el.newHand.onclick = deal;
 el.reset.onclick = () => {
   state.attempts = 0;
   state.correct = 0;
+  state.trainMisses = [];
   saveTrainingScore();
   renderTraining();
 };

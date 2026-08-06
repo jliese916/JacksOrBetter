@@ -1,11 +1,11 @@
 "use strict";
 
-const BUILD_VERSION = "31";
-const CACHE_NAME = "el-jefe-jacks-trainer-v31";
+const BUILD_VERSION = "32";
+const CACHE_NAME = "el-jefe-jacks-trainer-v32";
 const APP_SHELL = [
   "./index.html",
-  "./styles.css?v=31",
-  "./app.js?v=31",
+  "./styles.css?v=32",
+  "./app.js?v=32",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
@@ -50,22 +50,27 @@ self.addEventListener("fetch", event => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match("./index.html").then(cached => {
-        const network = fetch(event.request)
-          .then(response => cacheResponse(event.request, response, "./index.html"))
-          .catch(() => null);
-        return cached || network;
-      })
+      fetch(event.request)
+        .then(response => cacheResponse(event.request, response, "./index.html"))
+        .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  const url = new URL(event.request.url);
+  const isVersionedCode = url.pathname.endsWith("/app.js") || url.pathname.endsWith("/styles.css");
+  if (isVersionedCode) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => cacheResponse(event.request, response))
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then(response => cacheResponse(event.request, response))
-        .catch(() => cached);
-    })
+    caches.match(event.request).then(cached => cached ||
+      fetch(event.request).then(response => cacheResponse(event.request, response))
+    )
   );
 });
