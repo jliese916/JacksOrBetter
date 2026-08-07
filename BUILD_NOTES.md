@@ -1,4 +1,11 @@
-# Build notes — v35
+# Build notes — v38
+
+## v38
+- Mistake-review **Your hold** and **Correct hold** panels now render as a balanced two-column comparison beneath the dealt hand.
+- The strategy explanation remains full width beneath both columns.
+- Review mini-cards scale by viewport while preserving the established card, rank, suit, and inset proportions.
+- Includes the v37 Ladder #5 T-J-Q-K / Open-ended Broadway draw update.
+- App and service-worker cache versions bumped to 38.
 
 Validation performed:
 

@@ -1,4 +1,4 @@
-# Casa del Jefe — Video Poker Hall v36
+# Casa del Jefe — Video Poker Hall v38
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -8,6 +8,15 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Train** — practice optimal holds with immediate feedback and a persistent score.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
+
+## Version 38 changes
+
+- Mistake reviews now place **Your hold** and **Correct hold** side by side directly beneath the five-card dealt hand.
+- Both comparison hands remain centered inside equal-width columns.
+- Review card faces scale proportionally on narrow screens so even five-card holds can remain side by side without distorting rank or suit typography.
+- The full dealt hand remains the primary visual element with the restrained gold keyline introduced in v36.
+- Includes the v37 decision-ladder update: Ladder #5 is **T-J-Q-K — Open-ended Broadway draw**, with the explanation classifier based on the held T-J-Q-K pattern rather than the exact dealt hand.
+- Service-worker cache: `el-jefe-jacks-trainer-v38`.
 
 ## Version 36 changes
 
