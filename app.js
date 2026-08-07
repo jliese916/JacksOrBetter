@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "36";
+const APP_VERSION = "37";
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
@@ -530,7 +530,6 @@ function ladderExplanation(hand, optimalHolds) {
   const holdSet = optimalHolds[0] || new Set();
   const held = hand.filter(card => holdSet.has(card));
   const handResult = evaluateHand(hand).name;
-  const handRanks = sortedRanks(hand).join(",");
   const heldRanks = sortedRanks(held).join(",");
   const explanation = (number, title, rule, exception = "") => ({
     reference: `Complete Decision Ladder → #${number}`,
@@ -564,15 +563,15 @@ function ladderExplanation(hand, optimalHolds) {
     return explanation(4, "Four to a flush", "Keep the four cards of the same suit.", hasThreeRoyal ? "This hand uses the Ladder #3 switch to #4 rather than holding only three royal cards." : "");
   }
 
-  if (handRanks === "8,8,9,10,11" && heldRanks === "8,9,10,11") {
-    return explanation(5, "T-T-J-Q-K exception", "With exactly T-T-J-Q-K, discard either ten and hold T-J-Q-K.", "This is the only open-ended-straight draw that outranks a low pair.");
+  if (held.length === 4 && heldRanks === "8,9,10,11") {
+    return explanation(5, "T-J-Q-K", "Hold T-J-Q-K.");
   }
 
   if (held.length === 2 && rank(held[0]) === rank(held[1]) && rank(held[0]) <= 8) {
-    return explanation(6, "Low pair", "Hold the pair of tens or lower.", "Break a low pair only for an earlier ladder holding, including the specific T-T-J-Q-K exception at #5.");
+    return explanation(6, "Low pair", "Hold the pair of tens or lower.");
   }
 
-  if (isOpenEndedStraight(held)) return explanation(7, "Four-card open-ended straight", "Keep the four consecutive ranks that can complete a straight at either end.");
+  if (isOpenEndedStraight(held)) return explanation(7, "Other four-card open-ended straight", "Hold the four-card straight draw.");
 
   const sf = threeStraightFlushScore(held);
   if (sf && sf.score >= 3) return explanation(8, "3SF score 3 or higher", `Keep the three suited cards. Their 3SF score is ${sf.highCards} high card${sf.highCards === 1 ? "" : "s"} + ${sf.straightCount} possible straight${sf.straightCount === 1 ? "" : "s"} = ${sf.score}.`);
