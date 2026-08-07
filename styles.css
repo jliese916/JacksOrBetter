@@ -14,7 +14,7 @@
 
 
 /* Challenge missed-hand review */
-.challenge-review{padding:2px 0 4px;text-align:left}.challenge-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:8px}.challenge-review-heading h2{margin:3px 0 0;color:#0f172a}.challenge-review-intro{margin:0 0 16px!important;text-align:left}.challenge-review-link{display:block;margin:16px auto 0;border:0;background:transparent;color:#334155;font-weight:850;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.missed-hand-list{display:grid;gap:13px}.missed-hand-card{padding:14px;border:1px solid #dbe3ed;border-radius:16px;background:#f8fafc;box-shadow:0 5px 14px rgba(15,23,42,.05)}.missed-hand-number{margin-bottom:10px;color:#475569;font-size:.76rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.challenge-review-hand{padding:10px 7px;border-radius:12px;background:#fff}.missed-hold-grid{display:grid;gap:8px;margin-top:11px}.missed-hold-row{display:grid;gap:3px;padding:9px 10px;border-radius:11px;background:#fff}.missed-hold-row span{color:#64748b;font-size:.69rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}.missed-hold-row strong{line-height:1.4}.incorrect-decision{color:#b91c1c}.correct-decision{color:#15803d}@media(max-width:430px){.challenge-review-heading{align-items:center}.missed-hand-card{padding:11px}.challenge-review-hand{gap:4px}.missed-hold-row strong{font-size:.92rem}}
+.challenge-review{padding:2px 0 4px;text-align:left}.challenge-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:8px}.challenge-review-heading h2{margin:3px 0 0;color:#0f172a}.challenge-review-intro{margin:0 0 16px!important;text-align:left}.challenge-review-link{display:block;margin:16px auto 0;border:0;background:transparent;color:#334155;font-weight:850;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.missed-hand-list{display:grid;gap:13px}.missed-hand-card{padding:14px;border:1px solid #dbe3ed;border-radius:16px;background:#f8fafc;box-shadow:0 5px 14px rgba(15,23,42,.05)}.missed-hand-number{margin-bottom:10px;color:#475569;font-size:.76rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.challenge-review-hand{padding:10px 7px;border-radius:12px;background:#fff}.missed-hold-grid{display:grid;gap:8px;margin-top:11px}.missed-hold-row{display:grid;gap:3px;padding:9px 10px;border-radius:11px;background:#fff}.missed-hold-row > span:first-child{color:#64748b;font-size:.69rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}.missed-hold-row strong{line-height:1.4}.incorrect-decision{color:#b91c1c}.correct-decision{color:#15803d}@media(max-width:430px){.challenge-review-heading{align-items:center}.missed-hand-card{padding:11px}.challenge-review-hand{gap:4px}.missed-hold-row strong{font-size:.92rem}}
 
 /* Version 16 layout and reference tools */
 .header-paytable{width:min(430px,100%);margin:8px auto 0;padding:7px 12px;border:1px solid #cbd5e1;border-radius:12px;background:rgba(255,255,255,.72);color:#64748b;text-align:left;font-size:.82rem}.header-paytable summary{color:#475569;font-weight:800;text-align:center;cursor:pointer;list-style-position:inside}.header-paytable[open] summary{margin-bottom:9px}.header-paytable-grid{display:grid;grid-template-columns:1fr auto;gap:5px 18px;padding:8px 10px 4px;border-top:1px solid #e2e8f0}.header-paytable-grid strong{color:#0f172a;text-align:right}.status.error{width:min(520px,100%);min-height:0;margin:9px auto 0;padding:9px 12px;border:1px solid #fecaca;border-radius:10px;background:#fef2f2}.footer-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.review-details,.strategy-ladder-details{border:1px solid #dbe3ed;background:#f8fafc}.play-missed-list{display:grid;gap:11px;margin-top:12px}.play-missed-empty{margin:8px 0 2px!important;color:#64748b!important;font-size:.84rem;text-align:left}.play-missed-card{box-shadow:none;background:#fff}.strategy-ladder-details{margin:20px 0 0;border-radius:15px;padding:12px 10px;text-align:left}.strategy-ladder-details>summary{padding:0 5px;color:#334155;font-weight:900;cursor:pointer}.strategy-ladder-details[open]>summary{margin-bottom:12px}
@@ -247,7 +247,7 @@ body::before{
   background:#fffdf7;
   color:#24352e;
 }
-.missed-hand-number,.session-mistake-title,.missed-card-label,.missed-decision-grid span,.missed-hold-row span{color:#6c725f}
+.missed-hand-number,.session-mistake-title,.missed-card-label,.missed-decision-grid span,.missed-hold-row > span:first-child{color:#6c725f}
 .challenge-review-heading h2{color:var(--casa-gold-soft)}
 .challenge-review-intro{color:var(--casa-muted)!important}
 
@@ -411,7 +411,7 @@ footer{color:var(--casa-muted)}
   background:rgba(0,0,0,.24)!important;
   color:var(--casa-cream)!important;
 }
-.missed-hand-number,.session-mistake-title,.missed-card-label,.missed-decision-grid span,.missed-hold-row span{color:var(--casa-muted)!important}
+.missed-hand-number,.session-mistake-title,.missed-card-label,.missed-decision-grid span,.missed-hold-row > span:first-child{color:var(--casa-muted)!important}
 .incorrect-decision{color:#ff8f8f!important}.correct-decision{color:#8ee1aa!important}
 
 .footer-link img{width:23px;height:23px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
@@ -1060,4 +1060,79 @@ html{scrollbar-gutter:stable}
   opacity:1!important;
   filter:none!important;
   text-shadow:none!important;
+}
+
+
+/* Version 36: fix review-card cascade at the source and strengthen review hierarchy */
+/* Only the row label gets muted label typography. Card spans must retain card typography and suit color. */
+.missed-hold-row > span:first-child{
+  display:block;
+  width:100%;
+  text-align:center;
+}
+
+/* Both comparison holds use the same centered, full-strength card component. */
+.missed-hold-row .hold-card-visual,
+.missed-hold-row .incorrect-hold-visual,
+.missed-hold-row .correct-hold-card-visual{
+  width:100%;
+  justify-content:center;
+}
+.missed-hold-row .hold-card-row,
+.missed-hold-row .mini-hand{
+  justify-content:center;
+}
+.missed-hold-row .correct-hold-or{
+  padding-left:0;
+  text-align:center;
+}
+
+/* Lock mistake-review cards to the same proportions and colors as the shared mini-card face. */
+.missed-hand-card .missed-hold-row .mini-card{
+  width:46px;
+  height:66.5px;
+  border:1.5px solid #d8ccb0!important;
+  border-radius:8px;
+  background:#fffdf8!important;
+  box-shadow:0 3px 7px rgba(0,0,0,.24)!important;
+  opacity:1!important;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+  color:#111111;
+}
+.missed-hand-card .missed-hold-row .mini-card-rank{
+  font-size:1.92rem!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:-.06em!important;
+  opacity:1!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+.missed-hand-card .missed-hold-row .mini-card-suit{
+  position:absolute!important;
+  font-size:.83rem!important;
+  font-weight:900!important;
+  line-height:1!important;
+  opacity:1!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+.missed-hand-card .missed-hold-row .mini-card-suit-top{top:4.5px!important;right:4.5px!important}
+.missed-hand-card .missed-hold-row .mini-card-suit-bottom{bottom:4.5px!important;left:4.5px!important;transform:rotate(180deg)!important}
+.missed-hand-card .missed-hold-row .mini-card.suit-hearts{color:var(--suit-heart)!important}
+.missed-hand-card .missed-hold-row .mini-card.suit-diamonds{color:var(--suit-diamond)!important}
+.missed-hand-card .missed-hold-row .mini-card.suit-clubs{color:var(--suit-club)!important}
+.missed-hand-card .missed-hold-row .mini-card.suit-spades{color:var(--suit-spade)!important}
+
+/* The dealt five-card hand is the primary object: a restrained gold keyline and warmer surface. */
+.missed-hand-card .challenge-review-hand{
+  width:max-content;
+  max-width:100%;
+  margin:0 auto;
+  padding:10px 12px;
+  border:1px solid rgba(231,200,106,.34)!important;
+  border-radius:12px;
+  background:rgba(231,200,106,.065)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 3px 9px rgba(0,0,0,.12);
 }

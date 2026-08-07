@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "34";
+const APP_VERSION = "36";
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
