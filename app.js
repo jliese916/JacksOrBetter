@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "32";
+const APP_VERSION = "33";
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const SUITS = ["\u2665", "\u2666", "\u2663", "\u2660"];
 const WAGER = 5;
@@ -642,6 +642,43 @@ function ladderExplanation(hand, optimalHolds) {
   };
 }
 
+function makeHoldVisual(cards, { emptyText = "Discard all five cards", className = "" } = {}) {
+  const wrap = document.createElement("div");
+  wrap.className = `hold-card-visual ${className}`.trim();
+  if (!cards.length) {
+    const empty = document.createElement("span");
+    empty.className = "discard-all hold-card-empty";
+    empty.textContent = emptyText;
+    wrap.append(empty);
+    return wrap;
+  }
+  const row = document.createElement("div");
+  row.className = "mini-hand hold-card-row";
+  cards.forEach(card => row.append(miniCard(card)));
+  wrap.append(row);
+  return wrap;
+}
+
+function makeCorrectHoldVisual(hand, optimalHolds) {
+  const block = document.createElement("div");
+  block.className = "correct-hold-visual";
+  const labelNode = document.createElement("div");
+  labelNode.className = "correct-hold-label";
+  labelNode.textContent = optimalHolds.length > 1 ? "Correct holds" : "Correct hold";
+  block.append(labelNode);
+  optimalHolds.forEach((holdSet, index) => {
+    const cards = hand.filter(card => holdSet.has(card));
+    if (index > 0) {
+      const or = document.createElement("div");
+      or.className = "correct-hold-or";
+      or.textContent = "OR";
+      block.append(or);
+    }
+    block.append(makeHoldVisual(cards));
+  });
+  return block;
+}
+
 function makeDecisionDetails(hand, optimalHolds, { open = false } = {}) {
   const info = ladderExplanation(hand, optimalHolds);
   const details = document.createElement("details");
@@ -689,18 +726,20 @@ function buildMissedHandCard(miss, heading) {
   const yourDecision = document.createElement("div");
   yourDecision.className = "missed-hold-row";
   yourDecision.innerHTML = '<span>Your hold</span>';
-  const yourValue = document.createElement("strong");
-  yourValue.className = "incorrect-decision";
-  yourValue.textContent = describeStoredHold(miss.userHold);
-  yourDecision.append(yourValue);
+  yourDecision.append(makeHoldVisual(miss.userHold, { className: "incorrect-hold-visual" }));
 
   const correctDecision = document.createElement("div");
   correctDecision.className = "missed-hold-row";
   correctDecision.innerHTML = `<span>${miss.optimalHolds.length > 1 ? "Correct holds" : "Correct hold"}</span>`;
-  const correctValue = document.createElement("strong");
-  correctValue.className = "correct-decision";
-  correctValue.textContent = miss.optimalHolds.map(describeStoredHold).join("  OR  ");
-  correctDecision.append(correctValue);
+  miss.optimalHolds.forEach((cards, index) => {
+    if (index > 0) {
+      const or = document.createElement("div");
+      or.className = "correct-hold-or";
+      or.textContent = "OR";
+      correctDecision.append(or);
+    }
+    correctDecision.append(makeHoldVisual(cards, { className: "correct-hold-card-visual" }));
+  });
 
   const holdSets = miss.optimalHolds.map(cards => new Set(cards));
   decisions.append(yourDecision, correctDecision, makeDecisionDetails(miss.hand, holdSets));
@@ -737,7 +776,10 @@ function renderTrainDecisionFeedback(correct, hand, optimalHolds) {
     : '<span class="decision-status-icon incorrect">×</span><strong>Incorrect</strong>';
   el.feedback.append(result);
 
-  if (!correct) el.feedback.append(makeDecisionDetails(hand, optimalHolds, { open: true }));
+  if (!correct) {
+    el.feedback.append(makeCorrectHoldVisual(hand, optimalHolds));
+    el.feedback.append(makeDecisionDetails(hand, optimalHolds, { open: true }));
+  }
 }
 
 

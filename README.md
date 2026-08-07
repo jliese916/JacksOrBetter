@@ -1,4 +1,4 @@
-# Casa del Jefe — Video Poker Hall v32
+# Casa del Jefe — Video Poker Hall v33
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -9,7 +9,7 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - **Look Up** — enter any five-card hand, view all tied optimal holds, and open the embedded **Complete Decision Ladder**.
 - **El Jefe Challenge** — complete 200 hands without feedback. Scores of 190/200 or better earn an El Jefe Approved certificate; a perfect 200/200 earns the special **Grand Master — Certified by El Jefe** certificate.
 
-## Version 32 changes
+## Version 33 changes
 
 - Renames the Train table masthead to **TRAINING ROOM**, matching Ultimate Texas Hold’em.
 - Renames the Train decision button from **Check** to **Draw**.
@@ -19,7 +19,7 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - Rewrites Ladder #5 as the **T-T-J-Q-K exception**, displays all five cards, and states clearly that either ten is discarded while every other low-pair/open-ended-straight conflict keeps the pair.
 - Audits the explanation classifier against all 2,598,960 five-card starting hands with no unclassified optimal decisions.
 - Uses network-first loading for navigation and versioned code to reduce stale GitHub Pages builds.
-- Service-worker cache: `el-jefe-jacks-trainer-v32`.
+- Service-worker cache: `el-jefe-jacks-trainer-v33`.
 
 ## Version 31 changes
 

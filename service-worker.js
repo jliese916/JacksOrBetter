@@ -1,11 +1,11 @@
 "use strict";
 
-const BUILD_VERSION = "32";
-const CACHE_NAME = "el-jefe-jacks-trainer-v32";
+const BUILD_VERSION = "33";
+const CACHE_NAME = "el-jefe-jacks-trainer-v33";
 const APP_SHELL = [
   "./index.html",
-  "./styles.css?v=32",
-  "./app.js?v=32",
+  "./styles.css?v=33",
+  "./app.js?v=33",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
