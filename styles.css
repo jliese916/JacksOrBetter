@@ -1033,3 +1033,31 @@ html{scrollbar-gutter:stable}
 .incorrect-hold-visual .mini-card{box-shadow:0 3px 7px rgba(0,0,0,.22)}
 .correct-hold-card-visual .mini-card,.correct-hold-visual .mini-card{box-shadow:0 3px 7px rgba(0,0,0,.22)}
 @media(max-width:430px){.correct-hold-visual{padding:9px 8px}}
+
+/* Version 35: full-strength, centered correct-hold cards in mistake review */
+.missed-hold-row .correct-hold-card-visual{
+  width:100%;
+  justify-content:center;
+}
+.missed-hold-row .correct-hold-card-visual .hold-card-row,
+.missed-hold-row .correct-hold-card-visual .mini-hand{
+  justify-content:center;
+}
+.missed-hold-row .correct-hold-or{
+  padding-left:0;
+  text-align:center;
+}
+.missed-hold-row .correct-hold-card-visual .mini-card{
+  opacity:1!important;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+  background:#fffdf8!important;
+  border-color:#d8ccb0!important;
+  box-shadow:0 3px 7px rgba(0,0,0,.24)!important;
+}
+.missed-hold-row .correct-hold-card-visual .mini-card-rank,
+.missed-hold-row .correct-hold-card-visual .mini-card-suit{
+  opacity:1!important;
+  filter:none!important;
+  text-shadow:none!important;
+}

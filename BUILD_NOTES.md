@@ -1,4 +1,4 @@
-# Build notes — v34
+# Build notes — v35
 
 Validation performed:
 
@@ -7,6 +7,11 @@ Validation performed:
 - Every service-worker app-shell file exists.
 - The decision-ladder explanation classifier was checked against all 2,598,960 possible five-card starting hands; zero optimal decisions fell back to an unclassified explanation.
 - Ladder #5 was separately checked with T-T-J-Q-K and returns both equivalent holds, each discarding one ten.
+
+
+## v35
+- Correct Hold cards in mistake review now explicitly force full opacity, no filters, no blending, and the standard card-face background/border/shadow.
+- Correct Hold cards and tied-hold OR separators are centered to align visually with the reviewed five-card hand.
 
 
 ## v34
