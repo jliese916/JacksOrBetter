@@ -1,4 +1,4 @@
-# Casa del Jefe — Video Poker Hall v33
+# Casa del Jefe — Video Poker Hall v34
 
 This package is self-contained and includes `JacksOrBetterStrategy.json`.
 
@@ -19,7 +19,7 @@ This package is self-contained and includes `JacksOrBetterStrategy.json`.
 - Rewrites Ladder #5 as the **T-T-J-Q-K exception**, displays all five cards, and states clearly that either ten is discarded while every other low-pair/open-ended-straight conflict keeps the pair.
 - Audits the explanation classifier against all 2,598,960 five-card starting hands with no unclassified optimal decisions.
 - Uses network-first loading for navigation and versioned code to reduce stale GitHub Pages builds.
-- Service-worker cache: `el-jefe-jacks-trainer-v33`.
+- Service-worker cache: `el-jefe-jacks-trainer-v34`.
 
 ## Version 31 changes
 
